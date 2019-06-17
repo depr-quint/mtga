@@ -95,52 +95,6 @@ func parseBody(body []string) {
 	}
 }
 
-func parseTreadLogger(t time.Time, body []string) {
-	switch first := body[0]; {
-	case strings.HasPrefix(first, "==>"):
-		parseOutgoing(body[1:])
-	case strings.HasPrefix(first, "<=="):
-		parts := strings.Split(strings.TrimSuffix(strings.TrimPrefix(first, "<== "), ")"), "(")
-		parseIncoming(parts[0], parts[1], body[1:])
-	default:
-		// fmt.Println(first)
-	}
-}
-
-func parseOutgoing(body []string) {
-	var l threadLog
-	raw := []byte(strings.Join(body, " "))
-	if err := json.Unmarshal(raw, &l); err != nil {
-		log.Fatal(err)
-	}
-	// fmt.Printf("%s(%s)\n", l.Method, l.Id)
-}
-
-type threadLog struct {
-	Method string      `json:"method"`
-	Params interface{} `json:"params"`
-	Id     string      `json:"id"`
-}
-
-func parseIncoming(method, id string, body []string) {
-	if len(body) <= 1 {
-		return
-	}
-
-	var params interface{}
-	raw := []byte(strings.Join(body, " "))
-	if err := json.Unmarshal(raw, &params); err != nil {
-		log.Fatal(err)
-	}
-
-	_ = threadLog{
-		Method: method,
-		Params: params,
-		Id:     id,
-	}
-	// fmt.Printf("%s(%s)\n", l.Method, l.Id)
-}
-
 func parseClient(t time.Time, method clientMethod, body []string) {
 	if body[0] != "{" {
 		return
