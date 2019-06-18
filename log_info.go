@@ -30,9 +30,6 @@ func (info logInfo) parse() {
 		if err := json.Unmarshal(payload, &r); err != nil {
 			log.Fatal(err)
 		}
-		if len(r.Bookmarks) != 0 {
-			log.Printf("Unparsed fields: %s", r.Bookmarks)
-		}
 		if len(r.TotalMemoryOddities) != 0 {
 			log.Printf("Unparsed fields: %s", r.TotalMemoryOddities)
 		}
@@ -140,7 +137,7 @@ type performanceReport struct {
 	FirstTotalMemorySampleFrame int     `json:"FirstTotalMemorySampleFrame"`
 	LastTotalMemorySampleFrame  int     `json:"LastTotalMemorySampleFrame"`
 	TotalMemoryOddities         []interface{} // no example found in log, just an []
-	Bookmarks                   []interface{} // no example found in log, just an []
+	Bookmarks                   []bookmark       `json:"Bookmarks"`
 	QualitySettings             []qualitySetting `json:"QualitySettings"`
 	CpuBenchmark                benchmark        `json:"CpuBenchmark"`
 	GpuBenchmark                benchmark        `json:"GpuBenchmark"`
@@ -151,6 +148,11 @@ type frame struct {
 	Frame     int `json:"Frame"`
 	Value     int `json:"Value"`
 	Deviation int `json:"Deviation"`
+}
+
+type bookmark struct {
+	Frame int    `json:"Frame"`
+	Value string `json:"Value"`
 }
 
 type qualitySetting struct {

@@ -158,9 +158,9 @@ func (t *tail) tail() error {
 func (t *tail) watch(events chan event, errors chan error) {
 	for {
 		select {
-		case event := <-t.watcher.events:
+		case event := <-events:
 			events <- event
-		case err := <-t.watcher.errors:
+		case err := <-errors:
 			errors <- err
 		}
 	}
