@@ -73,30 +73,37 @@ func parseBody(body []string) {
 		return
 	}
 
-	switch first := body[0]; {
+	switch first, remaining := body[0], body[1:]; {
 	case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
 		date := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
 		t, err := time.Parse(MTGATime, date)
 		if err != nil {
+			log.Printf("Unparsed Tread Log: %s\n%s\n", first, remaining)
 			return
 		}
-
-		parseTreadLogger(t, body[1:])
+		parseTreadLogger(t, remaining)
 	case strings.HasPrefix(first, "[Client GRE]"):
 		parts := strings.Split(strings.TrimPrefix(first, "[Client GRE]"), ":")
 		t, err := time.Parse(MTGATime, strings.Join(parts[0:3], ":"))
 		if err != nil {
 			return
 		}
+		parseClient(t, clientMethod(strings.TrimSpace(parts[4])), remaining)
+	case strings.HasPrefix(first, "[Get SKUs]"):
+		// ignore for the time being
+	case strings.HasPrefix(first, "WARNING") ||
+		strings.HasPrefix(first, "Unloading"):
+		// ignore warnings/unloading
 
-		parseClient(t, clientMethod(strings.TrimSpace(parts[4])), body[1:])
 	default:
-		// fmt.Println(first)
+		log.Fatalf("Unparsed outgoing thread log: %s.\n%s\n", first, remaining)
+
 	}
 }
 
 func parseClient(t time.Time, method clientMethod, body []string) {
 	if body[0] != "{" {
+		log.Printf("Unparsedd Client Message: %s\n%s\n", method, body)
 		return
 	}
 
@@ -122,8 +129,9 @@ func parseClient(t time.Time, method clientMethod, body []string) {
 		if err := json.Unmarshal(raw, &event); err != nil {
 			log.Fatal(err)
 		}
+
 	default:
-		// fmt.Println(method, body)
+		log.Fatalf("Unparsed outgoing thread log: %s.\n%s\n", method, body)
 	}
 }
 
