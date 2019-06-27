@@ -19,7 +19,9 @@ func parseBody(body []string) {
 		date := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
 		t, err := time.Parse(MTGATime, date)
 		if err != nil {
-			log.Printf("Unparsed thread log: %s\n%s\n", first, remaining)
+			if !strings.HasPrefix(first, "[UnityCrossThreadLogger]Received unhandled GREMessageType") {
+				log.Printf("Unparsed thread log: %s\n%s\n", first, remaining)
+			}
 			return
 		}
 		parseTreadLogger(t, remaining)
@@ -30,20 +32,22 @@ func parseBody(body []string) {
 			return
 		}
 		parseClient(t, clientMethod(strings.TrimSpace(parts[4])), remaining)
-	case strings.HasPrefix(first, "[Get SKUs]"):
+	case strings.HasPrefix(first, "[Get SKUs]") ||
+		strings.HasPrefix(first, "[Store - Auth - Edit Payment]"):
 		// ignore for the time being
 	case strings.HasPrefix(first, "WARNING") ||
+		strings.HasPrefix(first, "BIError") ||
 		strings.HasPrefix(first, "Unloading"):
 		// ignore warnings/unloading
 
 	default:
-		log.Fatalf("Unparsed outgoing thread log: %s.\n%s\n", first, remaining)
+		log.Fatalf("Unparsed log: %s.\n%s\n", first, remaining)
 	}
 }
 
 func parseClient(t time.Time, method clientMethod, body []string) {
 	if body[0] != "{" {
-		log.Printf("Unparsedd client message: %s\n%s\n", method, body)
+		log.Printf("Unparsed client message: %s\n%s\n", method, body)
 		return
 	}
 
@@ -71,7 +75,7 @@ func parseClient(t time.Time, method clientMethod, body []string) {
 		}
 
 	default:
-		log.Fatalf("Unparsed outgoing thread log: %s.\n%s\n", method, body)
+		log.Fatalf("Unparsed client log: %s.\n%s\n", method, body)
 	}
 }
 
@@ -94,15 +98,15 @@ type authenticateResponse struct {
 }
 
 type messageEvent struct {
-	TransactionId string `json:"transactionId"`
-	Timestamp     string `json:"timestamp"`
-	Messages interface{} `json:"greToClientEvent"`
+	TransactionId string      `json:"transactionId"`
+	Timestamp     string      `json:"timestamp"`
+	Messages      interface{} `json:"greToClientEvent"`
 }
 
 type stateEvent struct {
-	TransactionId string `json:"transactionId"`
-	Timestamp     string `json:"timestamp"`
-	RoomState interface{} `json:"matchGameRoomStateChangedEvent"`
+	TransactionId string      `json:"transactionId"`
+	Timestamp     string      `json:"timestamp"`
+	RoomState     interface{} `json:"matchGameRoomStateChangedEvent"`
 }
 
 type clientMethod string

@@ -27,6 +27,6 @@ func parseTreadLogger(t time.Time, body []string) {
 		// TODO
 
 	default:
-		log.Fatalf("Unparsed outgoing thread log: %s\n%s\n", first, remaining)
+		log.Fatalf("Unparsed thread log: %s\n%s\n", first, remaining)
 	}
 }

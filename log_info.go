@@ -20,6 +20,12 @@ func (info logInfo) parse() {
 	}
 
 	switch info.MessageName {
+	case errorMsg:
+		var e threadError
+		if err := json.Unmarshal(payload, &e); err != nil {
+			log.Fatal(err)
+		}
+
 	case sceneChangeMsg:
 		var c sceneChange
 		if err := json.Unmarshal(payload, &c); err != nil {
@@ -86,12 +92,24 @@ func (info logInfo) parse() {
 		if err := json.Unmarshal(payload, &r); err != nil {
 			log.Fatal(err)
 		}
-		if len(r.Emotes) != 0 {
-			log.Printf("Unparsed fields: %s", r.Emotes)
+	case eventNavigationMsg:
+		var n eventNavigation
+		if err := json.Unmarshal(payload, &n); err != nil {
+			log.Fatal(err)
+		}
+	case systemMessageViewMsg:
+		var m systemMessageView
+		if err := json.Unmarshal(payload, &m); err != nil {
+			log.Fatal(err)
+		}
+	case avatarSelectionMsg:
+		var s avatarSelection
+		if err := json.Unmarshal(payload, &s); err != nil {
+			log.Fatal(err)
 		}
 
 	default:
-		log.Fatalf("Unparsed outgoing thread log: %s.\n%s\n", info.MessageName, payload)
+		log.Fatalf("Unparsed log info: %s.\n%s\n", info.MessageName, payload)
 	}
 }
 
@@ -105,12 +123,24 @@ const (
 	connectedMsg             logInfoMessage = "Client.Connected"
 	inventoryReportMsg       logInfoMessage = "Client.InventoryReport"
 	purchaseFunnelMsg        logInfoMessage = "Client.PurchaseFunnel"
-	gameStartMsg             logInfoMessage = "DuelScene.GameStart"
 	pregameSequenceReportMsg logInfoMessage = "Client.PregameSequenceReport"
-	gameStopMsg              logInfoMessage = "DuelScene.GameStop"
-	endOfMatchReportMsg      logInfoMessage = "DuelScene.EndOfMatchReport"
-	emotesUsedReportMsg      logInfoMessage = "DuelScene.EmotesUsedReport"
+	eventNavigationMsg       logInfoMessage = "Client.Home.EventNavigation"
+	systemMessageViewMsg     logInfoMessage = "Client.SystemMessageView"
+	avatarSelectionMsg       logInfoMessage = "Client.SetAvatarSelection"
+
+	gameStartMsg        logInfoMessage = "DuelScene.GameStart"
+	gameStopMsg         logInfoMessage = "DuelScene.GameStop"
+	endOfMatchReportMsg logInfoMessage = "DuelScene.EndOfMatchReport"
+	emotesUsedReportMsg logInfoMessage = "DuelScene.EmotesUsedReport"
+
+	errorMsg logInfoMessage = "UnityCrossThreadLogger.Error"
 )
+
+type threadError struct {
+	Message  string `json:"message"`
+	PlayerId string `json:"playerId"`
+	MatchId  string `json:"matchId"`
+}
 
 // Client changed scenes.
 type sceneChange struct {
@@ -366,7 +396,37 @@ type endOfMatchReport struct {
 
 // A tally of emotes used by a player during a match.
 type emotesUsedReport struct {
-	MatchId  string        `json:"matchId"`
-	Emotes   []interface{} `json:"emotes"`
-	PlayerId string        `json:"playerId"`
+	MatchId  string  `json:"matchId"`
+	Emotes   []emote `json:"emotes"`
+	PlayerId string  `json:"playerId"`
+}
+
+type emote struct {
+	EmoteName    string `json:"emoteName"`
+	EmoteMessage string `json:"emoteMessage"`
+	EmoteCount   int    `json:"emoteCount"`
+}
+
+// User navigated to an event page from the home page
+type eventNavigation struct {
+	PublicEventName string `json:"publicEventName"`
+	NavMethod       string `json:"publicEventName"`
+	PlayerId        string `json:"playerId"`
+}
+
+// Client viewed system message from , duration 00:00:00.0000000
+type systemMessageView struct {
+	CurrentSceneName string    `json:"currentSceneName"`
+	Title            string    `json:"title"`
+	Message          string    `json:"message"`
+	Timestamp        time.Time `json:"timestamp"`
+	Duration         string    `json:"duration"`
+	PlayerId         string    `json:"playerId"`
+}
+
+// Avatar Selected
+type avatarSelection struct {
+	Context         string `json:"Context"`
+	AvatarSelection string `json:"AvatarSelection"`
+	PlayerId        string `json:"playerId"`
 }
