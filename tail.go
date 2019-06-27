@@ -1,18 +1,19 @@
-package main
+package mtga
 
 import (
 	"bufio"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
 
-type tail struct {
+type Tail struct {
 	once     sync.Once
 	file     *os.File
 	filePath string
-	lines    chan []byte
+	logs     chan RawLog
 	reader   *bufio.Reader
 	watcher  *watcher
 	offset   int64
@@ -20,10 +21,10 @@ type tail struct {
 	err      error
 }
 
-func NewTail(filePath string) (*tail, error) {
-	t := &tail{
+func NewTail(filePath string) (*Tail, error) {
+	t := &Tail{
 		filePath: filePath,
-		lines:    make(chan []byte),
+		logs:     make(chan RawLog),
 		done:     make(chan bool),
 	}
 
@@ -36,7 +37,11 @@ func NewTail(filePath string) (*tail, error) {
 	return t, nil
 }
 
-func (t *tail) open() error {
+func (t Tail) Logs() chan RawLog {
+	return t.logs
+}
+
+func (t *Tail) open() error {
 	if t.file != nil {
 		if err := t.file.Close(); err != nil {
 			return err
@@ -53,11 +58,11 @@ func (t *tail) open() error {
 	}
 }
 
-func (t *tail) run() {
+func (t *Tail) run() {
 	t.close(t.tail())
 }
 
-func (t *tail) close(err error) {
+func (t *Tail) close(err error) {
 	t.err = err
 
 	if t.file != nil {
@@ -66,20 +71,21 @@ func (t *tail) close(err error) {
 		}
 	}
 
-	close(t.lines)
+	close(t.logs)
 }
 
-func (t *tail) tail() error {
+func (t *Tail) tail() error {
 	var (
 		events = make(chan event)
 		errors = make(chan error, 1)
 	)
 
-	t.watcher = NewWatcher(t.filePath, time.Duration(5)*time.Second)
+	t.watcher = newWatcher(t.filePath, time.Duration(5)*time.Second)
 	defer t.watcher.stop()
 	go t.watch(events, errors)
 
 	for {
+		var l RawLog
 		for {
 			s, err := t.reader.ReadBytes('\n')
 			if err != nil && err != io.EOF {
@@ -98,7 +104,12 @@ func (t *tail) tail() error {
 				break
 			}
 
-			t.lines <- s
+			if line := strings.TrimSpace(string(s)); line == "" {
+				t.logs <- l
+				l = RawLog{}
+			} else {
+				l.body = append(l.body, line)
+			}
 		}
 
 		select {
@@ -155,7 +166,7 @@ func (t *tail) tail() error {
 	}
 }
 
-func (t *tail) watch(events chan event, errors chan error) {
+func (t *Tail) watch(events chan event, errors chan error) {
 	for {
 		select {
 		case event := <-events:
