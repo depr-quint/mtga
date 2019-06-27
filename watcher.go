@@ -1,4 +1,4 @@
-package main
+package mtga
 
 import (
 	"os"
@@ -17,7 +17,7 @@ type watcher struct {
 	errors   chan error
 }
 
-func NewWatcher(pathToFile string, tick time.Duration) *watcher {
+func newWatcher(pathToFile string, tick time.Duration) *watcher {
 	return &watcher{
 		filePath: pathToFile,
 		lastSize: int64(-1),
