@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type event struct {
+type watchEvent struct {
 	size int64
 }
 
@@ -13,7 +13,7 @@ type watcher struct {
 	filePath string
 	lastSize int64
 	ticker   *time.Ticker
-	events   chan event
+	events   chan watchEvent
 	errors   chan error
 }
 
@@ -22,7 +22,7 @@ func newWatcher(pathToFile string, tick time.Duration) *watcher {
 		filePath: pathToFile,
 		lastSize: int64(-1),
 		ticker:   time.NewTicker(tick),
-		events:   make(chan event),
+		events:   make(chan watchEvent),
 		errors:   make(chan error),
 	}
 }
@@ -42,7 +42,7 @@ func (w *watcher) tick() {
 		w.errors <- err
 	} else if size != w.lastSize {
 		w.lastSize = size
-		w.events <- event{
+		w.events <- watchEvent{
 			size: size,
 		}
 	}

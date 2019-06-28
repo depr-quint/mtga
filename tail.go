@@ -76,7 +76,7 @@ func (t *Tail) close(err error) {
 
 func (t *Tail) tail() error {
 	var (
-		events = make(chan event)
+		events = make(chan watchEvent)
 		errors = make(chan error, 1)
 	)
 
@@ -166,7 +166,7 @@ func (t *Tail) tail() error {
 	}
 }
 
-func (t *Tail) watch(events chan event, errors chan error) {
+func (t *Tail) watch(events chan watchEvent, errors chan error) {
 	for {
 		select {
 		case event := <-events:
