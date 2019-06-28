@@ -24,13 +24,21 @@ type Log struct {
 func NewLog(heading string, body []string) Log {
 	first, remaining := body[0], body[1:]
 
+	var typ LogType
 	if strings.HasPrefix(first, Outgoing) {
+		typ = Outgoing
+	} else if strings.HasPrefix(first, Incoming) {
+		typ = Incoming
+	}
+
+	switch typ {
+	case Outgoing, Incoming:
 		method := LogMethod(regexp.MustCompile(`[a-zA-Z0-9.]+`).FindStringSubmatch(first)[0])
 		id, _ := strconv.Atoi(regexp.MustCompile(`\(([0-9]+)\)`).FindStringSubmatch(first)[1])
 		str := strings.TrimSpace(strings.Join(remaining, " "))
 
 		var raw []byte
-		if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") {
+		if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") && typ == Outgoing {
 			var m map[string]interface{}
 			err := json.Unmarshal([]byte(str), &m)
 			if err != nil {
@@ -40,28 +48,24 @@ func NewLog(heading string, body []string) Log {
 			if err != nil {
 				log.Fatalln(err)
 			}
+		} else {
+			raw = []byte(str)
 		}
 
-		return Log{Outgoing, method, id, raw}
+		return Log{typ, method, id, raw}
 	}
-
 	return Log{}
 }
 
 type LogMethod string
 
 const (
-	AuthenticateMethod   LogMethod = "Authenticate"
-	LogInfoMethod        LogMethod = "Log.Info"
-	ProductCatalogMethod LogMethod = "PlayerInventory.GetProductCatalog"
-	TrackDetailMethod    LogMethod = "Quest.GetTrackDetail"
-
-	PlayerCourseMethod LogMethod = "Event.GetPlayerCourseV2"
-	JoinQueueMethod    LogMethod = "Event.JoinQueue"
+	LogInfoMethod LogMethod = "Log.Info"
 )
 
 type LogType string
 
 const (
 	Outgoing = "==>"
+	Incoming = "<=="
 )

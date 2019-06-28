@@ -17,6 +17,7 @@ const (
 	PregameSequenceReportMsg InfoMessage = "Client.PregameSequenceReport"
 	PurchaseFunnelMsg        InfoMessage = "Client.PurchaseFunnel"
 	SceneChangeMsg           InfoMessage = "Client.SceneChange"
+	SystemMessageViewMsg     InfoMessage = "Client.SystemMessageView"
 	UserDeviceSpecsMsg       InfoMessage = "Client.UserDeviceSpecs"
 	EventNavigationMsg       InfoMessage = "Client.Home.EventNavigation"
 
