@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// Tail can monitor data streams and open files, displaying new information as it is written.
+// For example, it's a useful way to monitor the newest events in a system log in real time.
 type Tail struct {
 	once     sync.Once
 	file     *os.File
@@ -21,6 +23,7 @@ type Tail struct {
 	err      error
 }
 
+// NewTail creates a new tail that monitors the file located at the given file path.
 func NewTail(filePath string) (*Tail, error) {
 	t := &Tail{
 		filePath: filePath,
@@ -37,6 +40,7 @@ func NewTail(filePath string) (*Tail, error) {
 	return t, nil
 }
 
+// Logs returns a channel of (incoming) logs read from the monitored file.
 func (t Tail) Logs() chan RawLog {
 	return t.logs
 }

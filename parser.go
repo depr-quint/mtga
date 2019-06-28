@@ -15,6 +15,7 @@ import (
 	"github.com/di-wu/mtga/thread/outgoing/quest"
 )
 
+// Parser is a structure that holds the parser's callbacks.
 type Parser struct {
 	// thread
 	onThreadLog func(log thread.Log)
@@ -46,7 +47,9 @@ type Parser struct {
 	onGetTrackDetail func(detail quest.TrackDetail)
 }
 
-func (parser *Parser) ParseRawLog(l RawLog) {
+// Parse parses a raw log (returned by the tails logs channel).
+// It calls the callback that matches that parsed log.
+func (parser *Parser) Parse(l RawLog) {
 	if len(l.body) <= 1 {
 		return
 	}
@@ -143,30 +146,36 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		}
 
 	default:
-		panic.Fatalf("Unparsed log: %s.\n%s\n", l.Method, l.Json)
+		// panic.Fatalf("Unparsed log: %s.\n%s\n", l.Method, l.Json)
 	}
 }
 
+// OnAuthenticate attaches the given callback, which will be called on authenticating.
 func (parser *Parser) OnAuthenticate(callback func(auth outgoing.Authenticate)) {
 	parser.onAuthenticate = callback
 }
 
+// OnGetPlayerCourse attaches the given callback, which will be called on the request of retrieving the player (v2) courses.
 func (parser *Parser) OnGetPlayerCourse(callback func(event event.Event)) {
 	parser.onGetPlayerCourse = callback
 }
 
+// OnJoinQueue attaches the given callback, which will be called on joining an event queue.
 func (parser *Parser) OnJoinQueue(callback func(queue event.JoinQueue)) {
 	parser.onJoinQueue = callback
 }
 
+// OnGetProductCatalog attaches the given callback, which will be called on the request of retrieving the product catalog.
 func (parser *Parser) OnGetProductCatalog(callback func(catalog inventory.ProductCatalog)) {
 	parser.onGetProductCatalog = callback
 }
 
+// OnLogInfo attaches the given callback, which will be called on an outgoing info log.
 func (parser *Parser) OnLogInfo(callback func(info log.Info)) {
 	parser.onLogInfo = callback
 }
 
+// OnGetTrackDetail attaches the given callback, which will be called on the request of retrieving the track details.
 func (parser *Parser) OnGetTrackDetail(callback func(detail quest.TrackDetail)) {
 	parser.onGetTrackDetail = callback
 }
@@ -298,58 +307,72 @@ func (parser *Parser) parseLogInfo(l log.Info) {
 		}
 
 	default:
-		panic.Fatalf("Unparsed log: %s.\n%s\n", l.MessageName, l.Payload)
+		// panic.Fatalf("Unparsed log: %s.\n%s\n", l.MessageName, l.Payload)
 	}
 }
 
+// OnBootSequenceReport attaches the given callback, which will be called on the report of the boot sequence.
 func (parser *Parser) OnBootSequenceReport(callback func(report client.BootSequenceReport)) {
 	parser.onBootSequenceReport = callback
 }
 
+// OnConnected attaches the given callback, which will be called on connecting.
 func (parser *Parser) OnConnected(callback func(conn client.Connected)) {
 	parser.onConnected = callback
 }
 
+// OnHomeEventNavigation attaches the given callback, which will be called when the user navigated to an event page from the home page.
 func (parser *Parser) OnHomeEventNavigation(callback func(nav client.EventNavigation)) {
 	parser.onHomeEventNavigation = callback
 }
 
+// OnInventoryReport attaches the given callback, which will be called on the report of the summary of the inventory.
 func (parser *Parser) OnInventoryReport(callback func(report client.InventoryReport)) {
 	parser.onInventoryReport = callback
 }
 
+// OnPerformanceReport attaches the given callback, which will be called on the report of the session performance analysis.
 func (parser *Parser) OnPerformanceReport(callback func(report client.PerformanceReport)) {
 	parser.onPerformanceReport = callback
 }
 
+// OnPregameSequenceReport attaches the given callback, which will be called on te report of the duration of the
+// matchmaking processes including granular durations of notable events within. Durations are in seconds.
 func (parser *Parser) OnPregameSequenceReport(callback func(report client.PregameSequenceReport)) {
 	parser.onPregameSequenceReport = callback
 }
 
+// OnPurchaseFunnel attaches the given callback, which will be called on updating available store SKUs.
 func (parser *Parser) OnPurchaseFunnel(callback func(funnel client.PurchaseFunnel)) {
 	parser.onPurchaseFunnel = callback
 }
 
+// OnSceneChange attaches the given callback, which will be called on changing scenes.
 func (parser *Parser) OnSceneChange(callback func(change client.SceneChange)) {
 	parser.onSceneChange = callback
 }
 
+// OnUserDeviceSpecs attaches the given callback, which will be called on the report of the user device specs.
 func (parser *Parser) OnUserDeviceSpecs(callback func(specs client.UserDeviceSpecs)) {
 	parser.onUserDeviceSpecs = callback
 }
 
+// OnGameStart attaches the given callback, which will be called on starting the game within a match.
 func (parser *Parser) OnGameStart(callback func(start duel_scene.GameStart)) {
 	parser.onGameStart = callback
 }
 
+// OnGameStop attaches the given callback, which will be called on ending the game within a match.
 func (parser *Parser) OnGameStop(callback func(stop duel_scene.GameStop)) {
 	parser.onGameStop = callback
 }
 
+// OnEndOfMatchReport attaches the given callback, which will be called on the report of an end of a match.
 func (parser *Parser) OnEndOfMatchReport(callback func(report duel_scene.EndOfMatchReport)) {
 	parser.onEndOfMatchReport = callback
 }
 
+// OnEmotesUsedReport attaches the given callback, which will be called on the report of a tally of emotes used by a player during a match.
 func (parser *Parser) OnEmotesUsedReport(callback func(report duel_scene.EmotesUsedReport)) {
 	parser.onEmotesUsedReport = callback
 }
