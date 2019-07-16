@@ -2,6 +2,7 @@ package mtga
 
 import (
 	"encoding/json"
+	"fmt"
 	panic "log"
 
 	"github.com/di-wu/mtga/thread"
@@ -19,8 +20,10 @@ type Outgoing struct {
 	// thread/outgoing
 	onAuthenticate func(auth outgoing.Authenticate)
 	// thread/outgoing/event
+	onDeckSubmit      func(deck event.DeckSubmit)
 	onGetPlayerCourse func(event event.Event)
 	onJoinQueue       func(queue event.JoinQueue)
+	onJoin            func(event event.Event)
 	// thread/outgoing/inventory
 	onGetProductCatalog func(catalog inventory.ProductCatalog)
 	// thread/outgoing/log
@@ -58,6 +61,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			parser.onAuthenticate(auth)
 		}
 
+	case outgoing.DeckSubmitMethod:
+		if parser.onDeckSubmit != nil {
+			var d event.DeckSubmit
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onDeckSubmit(d)
+		}
 	case outgoing.GetPlayerCourseMethod:
 		if parser.onGetPlayerCourse != nil {
 			var e event.Event
@@ -66,6 +78,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.onGetPlayerCourse(e)
+		}
+	case outgoing.JoinMethod:
+		if parser.onJoin != nil {
+			var e event.Event
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onJoin(e)
 		}
 	case outgoing.JoinQueueMethod:
 		if parser.onJoinQueue != nil {
@@ -78,13 +99,13 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		}
 
 	case outgoing.GetProductCatalogMethod:
-		if parser.onGetProductCatalog != nil {
+		if parser.Outgoing.onGetProductCatalog != nil {
 			var catalog inventory.ProductCatalog
 			err := json.Unmarshal(l.Json, &catalog)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onGetProductCatalog(catalog)
+			parser.Outgoing.onGetProductCatalog(catalog)
 		}
 
 	case outgoing.LogErrorMethod:
@@ -118,7 +139,9 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		}
 
 	default:
-		panic.Fatalf("Unparsed outgoing log: %s.\n%s\n", l.Method, l.Json)
+		if parser.onUnknownLog != nil {
+			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing log: %s.\n%s\n", l.Method, l.Json))
+		}
 	}
 }
 
@@ -127,9 +150,19 @@ func (outgoing *Outgoing) OnAuthenticate(callback func(auth outgoing.Authenticat
 	outgoing.onAuthenticate = callback
 }
 
+// OnJoin attaches the given callback, which will be called on submitting a deck.
+func (outgoing *Outgoing) OnDeckSubmit(callback func(deck event.DeckSubmit)) {
+	outgoing.onDeckSubmit = callback
+}
+
 // OnGetPlayerCourse attaches the given callback, which will be called on the request of retrieving the player (v2) courses.
 func (outgoing *Outgoing) OnGetPlayerCourse(callback func(event event.Event)) {
 	outgoing.onGetPlayerCourse = callback
+}
+
+// OnJoin attaches the given callback, which will be called on joining an event.
+func (outgoing *Outgoing) OnJoin(callback func(event event.Event)) {
+	outgoing.onJoin = callback
 }
 
 // OnJoinQueue attaches the given callback, which will be called on joining an event queue.
@@ -293,7 +326,9 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 		}
 
 	default:
-		panic.Fatalf("Unparsed info log: %s.\n%s\n", l.MessageName, l.Payload)
+		if parser.onUnknownLog != nil {
+			parser.onUnknownLog(fmt.Sprintf("Unparsed info log: %s.\n%s\n", l.MessageName, l.Payload))
+		}
 	}
 }
 

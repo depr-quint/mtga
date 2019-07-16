@@ -6,6 +6,7 @@ import (
 	"github.com/di-wu/mtga/thread/incoming/front_door"
 	"github.com/di-wu/mtga/thread/incoming/inventory"
 	"github.com/di-wu/mtga/thread/incoming/mercantile"
+	"github.com/di-wu/mtga/thread/incoming/quest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +21,13 @@ func TestIncoming(t *testing.T) {
 	parser.Incoming.OnGetCatalogStatus(func(status inventory.CatalogStatus) {})
 	parser.Incoming.OnGetCombinedRankInfo(func(info event.CombinedRankInfo) {})
 	parser.Incoming.OnGetFormats(func(formats []inventory.Format) {})
+	parser.Incoming.OnGetPlayerArtSkins(func(skins inventory.PlayerArtSkins) {})
+	parser.Incoming.OnGetPlayerCards(func(cards inventory.PlayerCards) {})
+	parser.Incoming.OnGetPlayerInventory(func(inventory inventory.PlayerInventory) {})
+	parser.Incoming.OnGetProductCatalog(func(catalog inventory.ProductCatalog) {})
+	parser.Incoming.OnGetRewardSchedule(func(schedule inventory.RewardSchedule) {})
 	parser.Incoming.OnGetStoreStatus(func(status mercantile.StoreStatus) {})
+	parser.Incoming.OnGetPlayerQuests(func(quests []quest.PlayerQuest) {})
 	parser.Incoming.OnLogInfo(func(info []byte) {})
 
 	tail, err := NewTail(filePath)

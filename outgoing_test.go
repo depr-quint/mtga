@@ -18,7 +18,9 @@ func TestOutgoing(t *testing.T) {
 
 	parser := Parser{}
 	parser.Outgoing.OnAuthenticate(func(auth outgoing.Authenticate) {})
+	parser.Outgoing.OnDeckSubmit(func(deck event.DeckSubmit) {})
 	parser.Outgoing.OnGetPlayerCourse(func(event event.Event) {})
+	parser.Outgoing.OnJoin(func(event event.Event) {})
 	parser.Outgoing.OnJoinQueue(func(queue event.JoinQueue) {})
 	parser.Outgoing.OnGetProductCatalog(func(catalog inventory.ProductCatalog) {})
 	parser.Outgoing.OnLogError(func(err log.Err) {})

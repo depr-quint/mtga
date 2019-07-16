@@ -1,6 +1,7 @@
 package mtga
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/di-wu/mtga/thread"
@@ -12,6 +13,8 @@ type Parser struct {
 	onThreadLog func(log thread.Log)
 	Outgoing
 	Incoming
+	// unknown
+	onUnknownLog func(message string)
 }
 
 // Parse parses a raw log (returned by the tails logs channel).
@@ -28,8 +31,16 @@ func (parser *Parser) Parse(l RawLog) {
 			parser.onThreadLog(threadLog)
 		}
 		parser.parseTreadLog(threadLog)
+	case strings.HasPrefix(first, "Initialize engine version"),
+		strings.HasPrefix(first, "Fallback handler"),
+		strings.HasPrefix(first, "Unloading"),
+		strings.HasPrefix(first, "Setting up"),
+		strings.HasPrefix(first, "WARNING"):
+		// ignore
 	default:
-		// log.Fatalf("Unparsed log: %s.\n%s\n", first, remaining)
+		if parser.onUnknownLog != nil {
+			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s.\n%s\n", first, remaining))
+		}
 	}
 }
 
@@ -48,6 +59,12 @@ func (parser *Parser) parseTreadLog(l thread.Log) {
 	case thread.Incoming:
 		parser.parseIncomingThreadLog(l)
 	default:
-		// log.Fatalf("Unparsed log: %s.\n", l.Type)
+		if parser.onUnknownLog != nil {
+			parser.onUnknownLog(fmt.Sprintf("Unparsed thread log: %s.\n", l.Type))
+		}
 	}
+}
+
+func (parser *Parser) OnUnknownLog(callback func(message string)) {
+	parser.onUnknownLog = callback
 }
