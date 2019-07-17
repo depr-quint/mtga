@@ -31,11 +31,15 @@ func (parser *Parser) Parse(l RawLog) {
 			parser.onThreadLog(threadLog)
 		}
 		parser.parseTreadLog(threadLog)
-	case strings.HasPrefix(first, "Initialize engine version"),
+	case strings.HasPrefix(first, "[Get SKUs]"),
+		strings.HasPrefix(first, "[Client GRE]"),
+		strings.HasPrefix(first, "Initialize engine version"),
 		strings.HasPrefix(first, "Fallback handler"),
 		strings.HasPrefix(first, "Unloading"),
+		strings.HasPrefix(first, "Uploading"),
 		strings.HasPrefix(first, "Setting up"),
-		strings.HasPrefix(first, "WARNING"):
+		strings.HasPrefix(first, "WARNING"),
+		strings.HasPrefix(first, "System.InvalidOperationException"):
 		// ignore
 	default:
 		if parser.onUnknownLog != nil {

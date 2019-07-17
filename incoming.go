@@ -3,6 +3,8 @@ package mtga
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/di-wu/mtga/thread/incoming/mot_d"
+	"github.com/di-wu/mtga/thread/incoming/progression"
 	"github.com/di-wu/mtga/thread/incoming/quest"
 	panic "log"
 
@@ -18,9 +20,12 @@ import (
 // Incoming is a structure that holds the parser's incoming callbacks.
 type Incoming struct {
 	// thread/incoming/deck
-	onGetDeckLists func(decks []deck.Deck)
+	onGetDeckLists   func(decks []deck.Deck)
+	onGetPreconDecks func(decks []deck.PreconDeck)
 	// thread/incoming/event
-	onGetCombinedRankInfo func(info event.CombinedRankInfo)
+	onGetActiveEvents        func(events []event.ActiveEvent)
+	onGetCombinedRankInfo    func(info event.CombinedRankInfo)
+	onGetSeasonAndRankDetail func(detail event.SeasonRankAndDetail)
 	// thread/incoming/front_door
 	onConnectionDetails func(details front_door.ConnectionDetails)
 	// thread/incoming/inventory
@@ -31,10 +36,16 @@ type Incoming struct {
 	onGetPlayerInventory func(inventory inventory.PlayerInventory)
 	onGetProductCatalog  func(catalog inventory.ProductCatalog)
 	onGetRewardSchedule  func(schedule inventory.RewardSchedule)
-	// thread/outgoing/log
+	// thread/incoming/log
 	onIncomingLogInfo func(info []byte)
 	// thread/incoming/mercantile
+	onGetAllProducts func(products []mercantile.Product)
 	onGetStoreStatus func(status mercantile.StoreStatus)
+	// thread/incoming/mot_d
+	onGetMotD func(d mot_d.MotD)
+	// thread/incoming/progression
+	onGetAllTracks      func(tracks []progression.Track)
+	onGetPlayerProgress func(progress progression.PlayerProgress)
 	// thread/incoming/quest
 	onGetPlayerQuests func(quests []quest.PlayerQuest)
 }
@@ -49,6 +60,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.onGetDeckLists(d)
+		}
+	case incoming.GetPreconDeckMethod:
+		if parser.onGetPreconDecks != nil {
+			var d []deck.PreconDeck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetPreconDecks(d)
 		}
 
 	case incoming.ConnectionDetailsMethod:
@@ -70,6 +90,16 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			}
 			parser.onGetCatalogStatus(s)
 		}
+
+	case incoming.GetActiveEventsMethod:
+		if parser.onGetActiveEvents != nil {
+			var e []event.ActiveEvent
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetActiveEvents(e)
+		}
 	case incoming.GetCombinedRankInfoMethod:
 		if parser.onGetCombinedRankInfo != nil {
 			var i event.CombinedRankInfo
@@ -79,6 +109,16 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			}
 			parser.onGetCombinedRankInfo(i)
 		}
+	case incoming.GetSeasonAndRankDetailMethod:
+		if parser.onGetSeasonAndRankDetail != nil {
+			var d event.SeasonRankAndDetail
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetSeasonAndRankDetail(d)
+		}
+
 	case incoming.GetFormatsMethod:
 		if parser.onGetFormats != nil {
 			var f []inventory.Format
@@ -134,6 +174,45 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			parser.onGetRewardSchedule(s)
 		}
 
+	case incoming.GetAllTracksMethod:
+		if parser.onGetAllTracks != nil {
+			var t []progression.Track
+			err := json.Unmarshal(l.Json, &t)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetAllTracks(t)
+		}
+
+	case incoming.GetMotDMethod:
+		if parser.onGetMotD != nil {
+			var d mot_d.MotD
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetMotD(d)
+		}
+
+	case incoming.GetPlayerProgressMethod:
+		if parser.onGetPlayerProgress != nil {
+			var p progression.PlayerProgress
+			err := json.Unmarshal(l.Json, &p)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetPlayerProgress(p)
+		}
+
+	case incoming.GetAllProductsMethod:
+		if parser.onGetAllProducts != nil {
+			var p []mercantile.Product
+			err := json.Unmarshal(l.Json, &p)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetAllProducts(p)
+		}
 	case incoming.GetStoreStatusMethod:
 		if parser.onGetStoreStatus != nil {
 			var s mercantile.StoreStatus
@@ -154,7 +233,6 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			parser.onGetPlayerQuests(q)
 		}
 
-
 	case thread.LogInfoMethod:
 		if parser.onIncomingLogInfo != nil {
 			parser.onIncomingLogInfo(l.Json)
@@ -172,14 +250,29 @@ func (incoming *Incoming) OnConnectionDetails(callback func(details front_door.C
 	incoming.onConnectionDetails = callback
 }
 
+// OnGetActiveEvents attaches the given callback, which will be called on getting all the active events.
+func (incoming *Incoming) OnGetActiveEvents(callback func(events []event.ActiveEvent)) {
+	incoming.onGetActiveEvents = callback
+}
+
 // OnGetCombinedRankInfo attaches the given callback, which will be called on getting the combined rank info.
 func (incoming *Incoming) OnGetCombinedRankInfo(callback func(info event.CombinedRankInfo)) {
 	incoming.onGetCombinedRankInfo = callback
 }
 
+// OnGetSeasonAndRankDetail attaches the given callback, which will be called on getting the season and rank details.
+func (incoming *Incoming) OnGetSeasonAndRankDetail(callback func(detail event.SeasonRankAndDetail)) {
+	incoming.onGetSeasonAndRankDetail = callback
+}
+
 // OnGetDeckLists attaches the given callback, which will be called on getting the deck lists.
 func (incoming *Incoming) OnGetDeckLists(callback func(decks []deck.Deck)) {
 	incoming.onGetDeckLists = callback
+}
+
+// OnGetPreconDecks attaches the given callback, which will be called on getting the precon deck lists.
+func (incoming *Incoming) OnGetPreconDecks(callback func(decks []deck.PreconDeck)) {
+	incoming.onGetPreconDecks = callback
 }
 
 // OnGetCatalogStatus attaches the given callback, which will be called on getting the catalog status.
@@ -215,6 +308,26 @@ func (incoming *Incoming) OnGetProductCatalog(callback func(catalog inventory.Pr
 // OnGetRewardSchedule attaches the given callback, which will be called on getting the reward schedule.
 func (incoming *Incoming) OnGetRewardSchedule(callback func(schedule inventory.RewardSchedule)) {
 	incoming.onGetRewardSchedule = callback
+}
+
+// OnGetMotD attaches the given callback, which will be called on getting the mot d.
+func (incoming *Incoming) OnGetMotD(callback func(d mot_d.MotD)) {
+	incoming.onGetMotD = callback
+}
+
+// OnGetAllTracks attaches the given callback, which will be called on getting all the tracks.
+func (incoming *Incoming) OnGetAllTracks(callback func(tracks []progression.Track)) {
+	incoming.onGetAllTracks = callback
+}
+
+// OnGetPlayerProgress attaches the given callback, which will be called on getting the progress of the player.
+func (incoming *Incoming) OnGetPlayerProgress(callback func(progress progression.PlayerProgress)) {
+	incoming.onGetPlayerProgress = callback
+}
+
+// OnGetAllProducts attaches the given callback, which will be called on getting all the products.
+func (incoming *Incoming) OnGetAllProducts(callback func(products []mercantile.Product)) {
+	incoming.onGetAllProducts = callback
 }
 
 // OnGetStoreStatus attaches the given callback, which will be called on getting the store status.

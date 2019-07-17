@@ -1,5 +1,5 @@
 # MTGA Output Log Parser
-This is a tool for tailing and parsing the MTGA output_log.txt file. 
+This is a tool for monitoring and parsing the MTGA output_log.txt file. 
 
 [![GoDoc](https://godoc.org/github.com/di-wu/mtga?status.svg)](https://godoc.org/github.com/di-wu/mtga)
 ## Getting Started
