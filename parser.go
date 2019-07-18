@@ -39,6 +39,7 @@ func (parser *Parser) Parse(l RawLog) {
 		strings.HasPrefix(first, "Uploading"),
 		strings.HasPrefix(first, "Setting up"),
 		strings.HasPrefix(first, "WARNING"),
+		strings.HasPrefix(first, "BIError"),
 		strings.HasPrefix(first, "System.InvalidOperationException"):
 		// ignore
 	default:

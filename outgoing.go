@@ -20,26 +20,29 @@ type Outgoing struct {
 	// thread/outgoing
 	onAuthenticate func(auth outgoing.Authenticate)
 	// thread/outgoing/event
+	onAIPractice      func(practice event.AIPractice)
 	onDeckSubmit      func(deck event.DeckSubmit)
+	onDrop            func(event event.Event)
 	onGetPlayerCourse func(event event.Event)
 	onJoinQueue       func(queue event.JoinQueue)
 	onJoin            func(event event.Event)
 	// thread/outgoing/inventory
 	onGetProductCatalog func(catalog inventory.ProductCatalog)
 	// thread/outgoing/log
-	onLogError        func(err log.Err)
-	onOutgoingLogInfo func(info log.Info)
+	onLogError func(err log.Err)
+	onLogInfo  func(info log.Info)
 	// thread/outgoing/log/client
-	onBootSequenceReport    func(report client.BootSequenceReport)
-	onConnected             func(conn client.Connected)
-	onHomeEventNavigation   func(nav client.EventNavigation)
-	onInventoryReport       func(report client.InventoryReport)
-	onPerformanceReport     func(report client.PerformanceReport)
-	onPregameSequenceReport func(report client.PregameSequenceReport)
-	onPurchaseFunnel        func(funnel client.PurchaseFunnel)
-	onSceneChange           func(change client.SceneChange)
-	onSystemMessageView     func(view client.SystemMessageView)
-	onUserDeviceSpecs       func(specs client.UserDeviceSpecs)
+	onBootSequenceReport     func(report client.BootSequenceReport)
+	onConnected              func(conn client.Connected)
+	onHomeEventNavigation    func(nav client.EventNavigation)
+	onInventoryReport        func(report client.InventoryReport)
+	onPerformanceReport      func(report client.PerformanceReport)
+	onPregameSequenceReport  func(report client.PregameSequenceReport)
+	onProgressionTrackViewed func(view client.ProgressionView)
+	onPurchaseFunnel         func(funnel client.PurchaseFunnel)
+	onSceneChange            func(change client.SceneChange)
+	onSystemMessageView      func(view client.SystemMessageView)
+	onUserDeviceSpecs        func(specs client.UserDeviceSpecs)
 	// thread/outgoing/log/duel_scene
 	onGameStart        func(start duel_scene.GameStart)
 	onGameStop         func(stop duel_scene.GameStop)
@@ -61,41 +64,60 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			parser.onAuthenticate(auth)
 		}
 
+	case outgoing.AIPracticeMethod:
+		if parser.Outgoing.onAIPractice != nil {
+			var p event.AIPractice
+			err := json.Unmarshal(l.Json, &p)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onAIPractice(p)
+		}
 	case outgoing.DeckSubmitMethod:
-		if parser.onDeckSubmit != nil {
+		if parser.Outgoing.onDeckSubmit != nil {
 			var d event.DeckSubmit
 			err := json.Unmarshal(l.Json, &d)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onDeckSubmit(d)
+			parser.Outgoing.onDeckSubmit(d)
 		}
-	case outgoing.GetPlayerCourseMethod:
-		if parser.onGetPlayerCourse != nil {
+	case outgoing.DropMethod:
+		if parser.Outgoing.onDrop != nil {
 			var e event.Event
 			err := json.Unmarshal(l.Json, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onGetPlayerCourse(e)
+			parser.Outgoing.onDrop(e)
+		}
+
+	case outgoing.GetPlayerCourseMethod:
+		if parser.Outgoing.onGetPlayerCourse != nil {
+			var e event.Event
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onGetPlayerCourse(e)
 		}
 	case outgoing.JoinMethod:
-		if parser.onJoin != nil {
+		if parser.Outgoing.onJoin != nil {
 			var e event.Event
 			err := json.Unmarshal(l.Json, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onJoin(e)
+			parser.Outgoing.onJoin(e)
 		}
 	case outgoing.JoinQueueMethod:
-		if parser.onJoinQueue != nil {
+		if parser.Outgoing.onJoinQueue != nil {
 			var queue event.JoinQueue
 			err := json.Unmarshal(l.Json, &queue)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onJoinQueue(queue)
+			parser.Outgoing.onJoinQueue(queue)
 		}
 
 	case outgoing.GetProductCatalogMethod:
@@ -108,14 +130,14 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			parser.Outgoing.onGetProductCatalog(catalog)
 		}
 
-	case outgoing.LogErrorMethod:
-		if parser.onLogError != nil {
+	case thread.LogErrorMethod:
+		if parser.Outgoing.onLogError != nil {
 			var e log.Err
 			err := json.Unmarshal(l.Json, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onLogError(e)
+			parser.Outgoing.onLogError(e)
 		}
 	case thread.LogInfoMethod:
 		var info log.Info
@@ -123,19 +145,19 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		if err != nil {
 			panic.Fatalln(err)
 		}
-		if parser.onOutgoingLogInfo != nil {
-			parser.onOutgoingLogInfo(info)
+		if parser.Outgoing.onLogInfo != nil {
+			parser.Outgoing.onLogInfo(info)
 		}
 		parser.parseOutgoingLogInfo(info)
 
 	case outgoing.TrackDetailMethod:
-		if parser.onGetTrackDetail != nil {
+		if parser.Outgoing.onGetTrackDetail != nil {
 			var detail quest.TrackDetail
 			err := json.Unmarshal(l.Json, &detail)
 			if err != nil {
 				panic.Fatalln(err)
 			}
-			parser.onGetTrackDetail(detail)
+			parser.Outgoing.onGetTrackDetail(detail)
 		}
 
 	default:
@@ -150,9 +172,19 @@ func (outgoing *Outgoing) OnAuthenticate(callback func(auth outgoing.Authenticat
 	outgoing.onAuthenticate = callback
 }
 
+// OnAIPractice attaches the given callback, which will be called on practicing with the AI.
+func (outgoing *Outgoing) OnAIPractice(callback func(practice event.AIPractice)) {
+	outgoing.onAIPractice = callback
+}
+
 // OnJoin attaches the given callback, which will be called on submitting a deck.
 func (outgoing *Outgoing) OnDeckSubmit(callback func(deck event.DeckSubmit)) {
 	outgoing.onDeckSubmit = callback
+}
+
+// OnDrop attaches the given callback, which will be called on dropping an event.
+func (outgoing *Outgoing) OnDrop(callback func(event event.Event)) {
+	outgoing.onDrop = callback
 }
 
 // OnGetPlayerCourse attaches the given callback, which will be called on the request of retrieving the player (v2) courses.
@@ -182,7 +214,7 @@ func (outgoing *Outgoing) OnLogError(callback func(err log.Err)) {
 
 // OnLogInfo attaches the given callback, which will be called on an outgoing info log.
 func (outgoing *Outgoing) OnLogInfo(callback func(info log.Info)) {
-	outgoing.onOutgoingLogInfo = callback
+	outgoing.onLogInfo = callback
 }
 
 // OnGetTrackDetail attaches the given callback, which will be called on the request of retrieving the track details.
@@ -250,6 +282,15 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 				panic.Fatalln(err)
 			}
 			parser.onPregameSequenceReport(r)
+		}
+	case log.ProgressionTrackViewedMsg:
+		if parser.onProgressionTrackViewed != nil {
+			var v client.ProgressionView
+			err := json.Unmarshal(payload, &v)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onProgressionTrackViewed(v)
 		}
 	case log.PurchaseFunnelMsg:
 		if parser.onPurchaseFunnel != nil {
@@ -327,7 +368,7 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed info log: %s.\n%s\n", l.MessageName, l.Payload))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing info log: %s.\n%s\n", l.MessageName, l.Payload))
 		}
 	}
 }
@@ -361,6 +402,11 @@ func (outgoing *Outgoing) OnPerformanceReport(callback func(report client.Perfor
 // matchmaking processes including granular durations of notable events within. Durations are in seconds.
 func (outgoing *Outgoing) OnPregameSequenceReport(callback func(report client.PregameSequenceReport)) {
 	outgoing.onPregameSequenceReport = callback
+}
+
+// OnProgressionTrackViewed attaches the given callback, which will be called on viewing the track progression.
+func (outgoing *Outgoing) OnProgressionTrackViewed(callback func(view client.ProgressionView)) {
+	outgoing.onProgressionTrackViewed = callback
 }
 
 // OnPurchaseFunnel attaches the given callback, which will be called on updating available store SKUs.

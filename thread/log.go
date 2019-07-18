@@ -60,7 +60,8 @@ func NewLog(heading string, body []string) Log {
 type LogMethod string
 
 const (
-	LogInfoMethod LogMethod = "Log.Info"
+	LogInfoMethod  LogMethod = "Log.Info"
+	LogErrorMethod LogMethod = "Log.Error"
 )
 
 type LogType string

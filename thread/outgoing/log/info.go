@@ -10,16 +10,17 @@ type Info struct {
 type InfoMessage string
 
 const (
-	BootSequenceReportMsg    InfoMessage = "Client.BootSequenceReport"
-	ConnectedMsg             InfoMessage = "Client.Connected"
-	InventoryReportMsg       InfoMessage = "Client.InventoryReport"
-	PerformanceReportMsg     InfoMessage = "Client.PerformanceReport"
-	PregameSequenceReportMsg InfoMessage = "Client.PregameSequenceReport"
-	PurchaseFunnelMsg        InfoMessage = "Client.PurchaseFunnel"
-	SceneChangeMsg           InfoMessage = "Client.SceneChange"
-	SystemMessageViewMsg     InfoMessage = "Client.SystemMessageView"
-	UserDeviceSpecsMsg       InfoMessage = "Client.UserDeviceSpecs"
-	EventNavigationMsg       InfoMessage = "Client.Home.EventNavigation"
+	BootSequenceReportMsg     InfoMessage = "Client.BootSequenceReport"
+	ConnectedMsg              InfoMessage = "Client.Connected"
+	InventoryReportMsg        InfoMessage = "Client.InventoryReport"
+	PerformanceReportMsg      InfoMessage = "Client.PerformanceReport"
+	PregameSequenceReportMsg  InfoMessage = "Client.PregameSequenceReport"
+	ProgressionTrackViewedMsg InfoMessage = "Client.ProgressionTrackViewed"
+	PurchaseFunnelMsg         InfoMessage = "Client.PurchaseFunnel"
+	SceneChangeMsg            InfoMessage = "Client.SceneChange"
+	SystemMessageViewMsg      InfoMessage = "Client.SystemMessageView"
+	UserDeviceSpecsMsg        InfoMessage = "Client.UserDeviceSpecs"
+	EventNavigationMsg        InfoMessage = "Client.Home.EventNavigation"
 
 	GameStartMsg        InfoMessage = "DuelScene.GameStart"
 	GameStopMsg         InfoMessage = "DuelScene.GameStop"

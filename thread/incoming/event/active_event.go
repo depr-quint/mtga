@@ -2,7 +2,6 @@ package event
 
 import (
 	"github.com/di-wu/mtga/thread/incoming"
-	"time"
 )
 
 type ActiveEvent struct {
@@ -11,9 +10,9 @@ type ActiveEvent struct {
 	EventState           string           `json:"EventState"`
 	EventType            string           `json:"EventType"`
 	ModuleGlobalData     ModuleGlobalData `json:"ModuleGlobalData"`
-	StartTime            time.Time        `json:"StartTime"`
-	LockedTime           time.Time        `json:"LockedTime"`
-	ClosedTime           time.Time        `json:"ClosedTime"`
+	StartTime            string           `json:"StartTime"`
+	LockedTime           string           `json:"LockedTime"`
+	ClosedTime           string           `json:"ClosedTime"`
 	Parameters           interface{}      `json:"Parameters"`
 	Group                string           `json:"Group"`
 	PastEntries          string           `json:"PastEntries"`
@@ -38,7 +37,7 @@ type ModuleGlobalData struct {
 
 type EntryFee struct {
 	CurrencyType string      `json:"CurrencyType"`
-	Quantity     string      `json:"Quantity"`
+	Quantity     int         `json:"Quantity"`
 	MaxUses      interface{} `json:"MaxUses"`
 }
 

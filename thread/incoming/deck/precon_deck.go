@@ -1,7 +1,5 @@
 package deck
 
-import "time"
-
 type PreconDeck struct {
 	Id            string      `json:"id"`
 	Name          string      `json:"name"`
@@ -11,7 +9,7 @@ type PreconDeck struct {
 	DeckTileId    interface{} `json:"deckTileId"`
 	MainDeck      []Card      `json:"mainDeck"`
 	Sideboard     []Card      `json:"sideboard"`
-	LastUpdated   time.Time   `json:"lastUpdated"`
+	LastUpdated   string      `json:"lastUpdated"`
 	LockedForUse  bool        `json:"lockedForUse"`
 	LockedForEdit bool        `json:"lockedForEdit"`
 	CardBack      string      `json:"cardBack"`

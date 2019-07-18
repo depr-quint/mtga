@@ -18,7 +18,9 @@ func TestOutgoing(t *testing.T) {
 
 	parser := Parser{}
 	parser.Outgoing.OnAuthenticate(func(auth outgoing.Authenticate) {})
+	parser.Outgoing.OnAIPractice(func(practice event.AIPractice) {})
 	parser.Outgoing.OnDeckSubmit(func(deck event.DeckSubmit) {})
+	parser.Outgoing.OnDrop(func(event event.Event) {})
 	parser.Outgoing.OnGetPlayerCourse(func(event event.Event) {})
 	parser.Outgoing.OnJoin(func(event event.Event) {})
 	parser.Outgoing.OnJoinQueue(func(queue event.JoinQueue) {})
@@ -31,6 +33,7 @@ func TestOutgoing(t *testing.T) {
 	parser.Outgoing.OnInventoryReport(func(report client.InventoryReport) {})
 	parser.Outgoing.OnPerformanceReport(func(report client.PerformanceReport) {})
 	parser.Outgoing.OnPregameSequenceReport(func(report client.PregameSequenceReport) {})
+	parser.Outgoing.OnProgressionTrackViewed(func(view client.ProgressionView) {})
 	parser.Outgoing.OnPurchaseFunnel(func(funnel client.PurchaseFunnel) {})
 	parser.Outgoing.OnSceneChange(func(change client.SceneChange) {})
 	parser.Outgoing.OnSystemMessageView(func(view client.SystemMessageView) {})
@@ -38,8 +41,8 @@ func TestOutgoing(t *testing.T) {
 	parser.Outgoing.OnGameStart(func(start duel_scene.GameStart) {})
 	parser.Outgoing.OnGameStop(func(stop duel_scene.GameStop) {})
 	parser.Outgoing.OnEndOfMatchReport(func(report duel_scene.EndOfMatchReport) {})
-	parser.OnEmotesUsedReport(func(report duel_scene.EmotesUsedReport) {})
-	parser.OnGetTrackDetail(func(detail quest.TrackDetail) {})
+	parser.Outgoing.OnEmotesUsedReport(func(report duel_scene.EmotesUsedReport) {})
+	parser.Outgoing.OnGetTrackDetail(func(detail quest.TrackDetail) {})
 
 	// TODO add info log methods
 

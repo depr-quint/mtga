@@ -2,7 +2,6 @@ package event
 
 import (
 	"github.com/di-wu/mtga/thread/incoming"
-	"time"
 )
 
 type SeasonRankAndDetail struct {
@@ -12,12 +11,12 @@ type SeasonRankAndDetail struct {
 }
 
 type CurrentSeason struct {
-	SeasonOrdinal            int       `json:"seasonOrdinal"`
-	SeasonStartTime          time.Time `json:"seasonStartTime"`
-	SeasonEndTime            time.Time `json:"seasonEndTime"`
-	SeasonLimitedRewards     Season    `json:"seasonLimitedRewards"`
-	SeasonConstructedRewards Season    `json:"seasonConstructedRewards"`
-	MinMatches               int       `json:"minMatches"`
+	SeasonOrdinal            int    `json:"seasonOrdinal"`
+	SeasonStartTime          string `json:"seasonStartTime"`
+	SeasonEndTime            string `json:"seasonEndTime"`
+	SeasonLimitedRewards     Season `json:"seasonLimitedRewards"`
+	SeasonConstructedRewards Season `json:"seasonConstructedRewards"`
+	MinMatches               int    `json:"minMatches"`
 }
 
 type Season struct {
