@@ -4,6 +4,7 @@ import "github.com/di-wu/mtga/thread"
 
 const (
 	AuthenticateMethod      thread.LogMethod = "Authenticate"
+	CrackBoosterMethod      thread.LogMethod = "PlayerInventory.CrackBoostersV3"
 	GetProductCatalogMethod thread.LogMethod = "PlayerInventory.GetProductCatalog"
 	TrackDetailMethod       thread.LogMethod = "Quest.GetTrackDetail"
 

@@ -31,6 +31,7 @@ func TestIncoming(t *testing.T) {
 	parser.Incoming.OnJoin(func(course event.Course) {})
 	parser.Incoming.OnLeaveQueue(func(leave event.LeaveQueue) {})
 	parser.Incoming.OnGetSeasonAndRankDetail(func(detail event.SeasonRankAndDetail) {})
+	parser.Incoming.OnCrackBooster(func(booster inventory.CrackedBooster) {})
 	parser.Incoming.OnGetFormats(func(formats []inventory.Format) {})
 	parser.Incoming.OnGetPlayerArtSkins(func(skins inventory.PlayerArtSkins) {})
 	parser.Incoming.OnGetPlayerCards(func(cards inventory.PlayerCards) {})

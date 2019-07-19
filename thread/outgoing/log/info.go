@@ -18,6 +18,7 @@ const (
 	ProgressionTrackViewedMsg InfoMessage = "Client.ProgressionTrackViewed"
 	PurchaseFunnelMsg         InfoMessage = "Client.PurchaseFunnel"
 	SceneChangeMsg            InfoMessage = "Client.SceneChange"
+	SetAvatarSelectoinMsg     InfoMessage = "Client.SetAvatarSelection"
 	SystemMessageViewMsg      InfoMessage = "Client.SystemMessageView"
 	UserDeviceSpecsMsg        InfoMessage = "Client.UserDeviceSpecs"
 	EventNavigationMsg        InfoMessage = "Client.Home.EventNavigation"

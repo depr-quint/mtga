@@ -6,7 +6,7 @@ const (
 	ConnectionDetailsMethod thread.LogMethod = "FrontDoor.ConnectionDetails"
 
 	GetCatalogStatusMethod         thread.LogMethod = "PlayerInventory.GetCatalogStatus"
-	AIPractiveMethod               thread.LogMethod = "Event.AIPractice"
+	AIPracticeMethod               thread.LogMethod = "Event.AIPractice"
 	DeckSubmitMethod               thread.LogMethod = "Event.DeckSubmitV3"
 	DropMethod                     thread.LogMethod = "Event.Drop"
 	GetActiveEventsMethod          thread.LogMethod = "Event.GetActiveEventsV2"
@@ -19,6 +19,7 @@ const (
 	LeaveQueueMethod               thread.LogMethod = "Event.LeaveQueue"
 	GetDeckListsMethod             thread.LogMethod = "Deck.GetDeckListsV3"
 	GetPreconDeckMethod            thread.LogMethod = "Deck.GetPreconDecks"
+	CrackBoosterMethod             thread.LogMethod = "PlayerInventory.CrackBoostersV3"
 	GetFormatsMethod               thread.LogMethod = "PlayerInventory.GetFormats"
 	GetPlayerArtSkinsMethod        thread.LogMethod = "PlayerInventory.GetPlayerArtSkins"
 	GetPlayerCardsMethod           thread.LogMethod = "PlayerInventory.GetPlayerCardsV3"

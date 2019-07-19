@@ -35,6 +35,7 @@ type Incoming struct {
 	// thread/incoming/front_door
 	onConnectionDetails func(details front_door.ConnectionDetails)
 	// thread/incoming/inventory
+	onCrackBooster          func(booster inventory.CrackedBooster)
 	onGetCatalogStatus      func(status inventory.CatalogStatus)
 	onGetFormats            func(formats []inventory.Format)
 	onGetPlayerArtSkins     func(skins inventory.PlayerArtSkins)
@@ -94,6 +95,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			parser.onConnectionDetails(d)
 		}
 
+	case incoming.CrackBoosterMethod:
+		if parser.Incoming.onCrackBooster != nil {
+			var b inventory.CrackedBooster
+			err := json.Unmarshal(l.Json, &b)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onCrackBooster(b)
+		}
 	case incoming.GetCatalogStatusMethod:
 		if parser.onGetCatalogStatus != nil {
 			var s inventory.CatalogStatus
@@ -329,7 +339,7 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			parser.Incoming.onGetTrackDetail(d)
 		}
 
-	case incoming.AIPractiveMethod:
+	case incoming.AIPracticeMethod:
 		if parser.Incoming.onAIPractice != nil {
 			parser.Incoming.onAIPractice(string(l.Json) == "Success")
 		}
@@ -426,6 +436,11 @@ func (incoming *Incoming) OnGetDeckLists(callback func(decks []deck.Deck)) {
 // OnGetPreconDecks attaches the given callback, which will be called on getting the precon deck lists.
 func (incoming *Incoming) OnGetPreconDecks(callback func(decks []deck.PreconDeck)) {
 	incoming.onGetPreconDecks = callback
+}
+
+// OnCrackBooster attaches the given callback, which will be called on getting the cracked booster.
+func (incoming *Incoming) OnCrackBooster(callback func(booster inventory.CrackedBooster)) {
+	incoming.onCrackBooster = callback
 }
 
 // OnGetCatalogStatus attaches the given callback, which will be called on getting the catalog status.

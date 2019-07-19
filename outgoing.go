@@ -27,6 +27,7 @@ type Outgoing struct {
 	onJoinQueue       func(queue event.JoinQueue)
 	onJoin            func(event event.Event)
 	// thread/outgoing/inventory
+	onCrackBooster      func(crack inventory.CrackBooster)
 	onGetProductCatalog func(catalog inventory.ProductCatalog)
 	// thread/outgoing/log
 	onLogError func(err log.Err)
@@ -41,6 +42,7 @@ type Outgoing struct {
 	onProgressionTrackViewed func(view client.ProgressionView)
 	onPurchaseFunnel         func(funnel client.PurchaseFunnel)
 	onSceneChange            func(change client.SceneChange)
+	onSetAvatarSelection     func(selection client.AvatarSelection)
 	onSystemMessageView      func(view client.SystemMessageView)
 	onUserDeviceSpecs        func(specs client.UserDeviceSpecs)
 	// thread/outgoing/log/duel_scene
@@ -120,6 +122,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			parser.Outgoing.onJoinQueue(queue)
 		}
 
+	case outgoing.CrackBoosterMethod:
+		if parser.Outgoing.onCrackBooster != nil {
+			var crack inventory.CrackBooster
+			err := json.Unmarshal(l.Json, &crack)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onCrackBooster(crack)
+		}
 	case outgoing.GetProductCatalogMethod:
 		if parser.Outgoing.onGetProductCatalog != nil {
 			var catalog inventory.ProductCatalog
@@ -200,6 +211,11 @@ func (outgoing *Outgoing) OnJoin(callback func(event event.Event)) {
 // OnJoinQueue attaches the given callback, which will be called on joining an event queue.
 func (outgoing *Outgoing) OnJoinQueue(callback func(queue event.JoinQueue)) {
 	outgoing.onJoinQueue = callback
+}
+
+// OnCrackBooster attaches the given callback, which will be called on the request of retrieving a cracked booster.
+func (outgoing *Outgoing) OnCrackBooster(callback func(crack inventory.CrackBooster)) {
+	outgoing.onCrackBooster = callback
 }
 
 // OnGetProductCatalog attaches the given callback, which will be called on the request of retrieving the product catalog.
@@ -310,6 +326,15 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 			}
 			parser.onSceneChange(c)
 		}
+	case log.SetAvatarSelectoinMsg:
+		if parser.onSetAvatarSelection != nil {
+			var s client.AvatarSelection
+			err := json.Unmarshal(payload, &s)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onSetAvatarSelection(s)
+		}
 	case log.SystemMessageViewMsg:
 		if parser.onSystemMessageView != nil {
 			var v client.SystemMessageView
@@ -417,6 +442,11 @@ func (outgoing *Outgoing) OnPurchaseFunnel(callback func(funnel client.PurchaseF
 // OnSceneChange attaches the given callback, which will be called on changing scenes.
 func (outgoing *Outgoing) OnSceneChange(callback func(change client.SceneChange)) {
 	outgoing.onSceneChange = callback
+}
+
+// OnSetAvatarSelection attaches the given callback, which will be called on selecting an avatar.
+func (outgoing *Outgoing) OnSetAvatarSelection(callback func(selection client.AvatarSelection)) {
+	outgoing.onSetAvatarSelection = callback
 }
 
 // OnSystemMessageView attaches the given callback, which will be called on system messages.
