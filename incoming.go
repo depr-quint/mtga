@@ -22,6 +22,7 @@ type Incoming struct {
 	onGetDeckLists   func(decks []deck.Deck)
 	onGetPreconDecks func(decks []deck.PreconDeck)
 	// thread/incoming/event
+	onClaimPrize               func(claim event.ClaimPrize)
 	onDeckSubmit               func(submit event.DeckSubmit)
 	onDrop                     func(course event.Drop)
 	onGetActiveEvents          func(events []event.ActiveEvent)
@@ -32,6 +33,7 @@ type Incoming struct {
 	onGetSeasonAndRankDetail   func(detail event.SeasonRankAndDetail)
 	onJoin                     func(course event.Course)
 	onLeaveQueue               func(leave event.LeaveQueue)
+	onPayEntry                 func(entry event.PayEntry)
 	// thread/incoming/front_door
 	onConnectionDetails func(details front_door.ConnectionDetails)
 	// thread/incoming/inventory
@@ -114,6 +116,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			parser.onGetCatalogStatus(s)
 		}
 
+	case incoming.ClaimPrizeMethod:
+		if parser.Incoming.onClaimPrize != nil {
+			var c event.ClaimPrize
+			err := json.Unmarshal(l.Json, &c)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onClaimPrize(c)
+		}
 	case incoming.DeckSubmitMethod:
 		if parser.Incoming.onDeckSubmit != nil {
 			var s event.DeckSubmit
@@ -186,7 +197,6 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			}
 			parser.onLeaveQueue(q)
 		}
-
 	case incoming.GetSeasonAndRankDetailMethod:
 		if parser.onGetSeasonAndRankDetail != nil {
 			var d event.SeasonRankAndDetail
@@ -204,6 +214,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.Incoming.onJoin(e)
+		}
+	case incoming.PayEntryMethod:
+		if parser.Incoming.onPayEntry != nil {
+			var e event.PayEntry
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onPayEntry(e)
 		}
 
 	case incoming.GetFormatsMethod:
@@ -378,6 +397,11 @@ func (incoming *Incoming) OnConnectionDetails(callback func(details front_door.C
 	incoming.onConnectionDetails = callback
 }
 
+// OnClaimPrize attaches the given callback, which will be called on claiming the prize of an event.
+func (incoming *Incoming) OnClaimPrize(callback func(claim event.ClaimPrize)) {
+	incoming.onClaimPrize = callback
+}
+
 // OnDeckSubmit attaches the given callback, which will be called on submitting a deck.
 func (incoming *Incoming) OnDeckSubmit(callback func(submit event.DeckSubmit)) {
 	incoming.onDeckSubmit = callback
@@ -426,6 +450,11 @@ func (incoming *Incoming) OnJoin(callback func(course event.Course)) {
 // OnLeaveQueue attaches the given callback, which will be called on leaving the queue.
 func (incoming *Incoming) OnLeaveQueue(callback func(leave event.LeaveQueue)) {
 	incoming.onLeaveQueue = callback
+}
+
+// OnPayEntry attaches the given callback, which will be called on after paying the entry.
+func (incoming *Incoming) OnPayEntry(callback func(entry event.PayEntry)) {
+	incoming.onPayEntry = callback
 }
 
 // OnGetDeckLists attaches the given callback, which will be called on getting the deck lists.

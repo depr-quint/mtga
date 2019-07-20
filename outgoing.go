@@ -21,11 +21,13 @@ type Outgoing struct {
 	onAuthenticate func(auth outgoing.Authenticate)
 	// thread/outgoing/event
 	onAIPractice      func(practice event.AIPractice)
+	onClaimPrize      func(event event.Event)
 	onDeckSubmit      func(deck event.DeckSubmit)
 	onDrop            func(event event.Event)
 	onGetPlayerCourse func(event event.Event)
 	onJoinQueue       func(queue event.JoinQueue)
 	onJoin            func(event event.Event)
+	onPayEntry        func(entry event.PayEntry)
 	// thread/outgoing/inventory
 	onCrackBooster      func(crack inventory.CrackBooster)
 	onGetProductCatalog func(catalog inventory.ProductCatalog)
@@ -33,18 +35,19 @@ type Outgoing struct {
 	onLogError func(err log.Err)
 	onLogInfo  func(info log.Info)
 	// thread/outgoing/log/client
-	onBootSequenceReport     func(report client.BootSequenceReport)
-	onConnected              func(conn client.Connected)
-	onHomeEventNavigation    func(nav client.EventNavigation)
-	onInventoryReport        func(report client.InventoryReport)
-	onPerformanceReport      func(report client.PerformanceReport)
-	onPregameSequenceReport  func(report client.PregameSequenceReport)
-	onProgressionTrackViewed func(view client.ProgressionView)
-	onPurchaseFunnel         func(funnel client.PurchaseFunnel)
-	onSceneChange            func(change client.SceneChange)
-	onSetAvatarSelection     func(selection client.AvatarSelection)
-	onSystemMessageView      func(view client.SystemMessageView)
-	onUserDeviceSpecs        func(specs client.UserDeviceSpecs)
+	onBootSequenceReport         func(report client.BootSequenceReport)
+	onConnected                  func(conn client.Connected)
+	onHomeEventNavigation        func(nav client.EventNavigation)
+	onInventoryReport            func(report client.InventoryReport)
+	onPerformanceReport          func(report client.PerformanceReport)
+	onPregameSequenceReport      func(report client.PregameSequenceReport)
+	onProgressionRewardWebViewed func(view client.RewardWeb)
+	onProgressionTrackViewed     func(view client.ProgressionView)
+	onPurchaseFunnel             func(funnel client.PurchaseFunnel)
+	onSceneChange                func(change client.SceneChange)
+	onSetAvatarSelection         func(selection client.AvatarSelection)
+	onSystemMessageView          func(view client.SystemMessageView)
+	onUserDeviceSpecs            func(specs client.UserDeviceSpecs)
 	// thread/outgoing/log/duel_scene
 	onGameStart        func(start duel_scene.GameStart)
 	onGameStop         func(stop duel_scene.GameStop)
@@ -75,6 +78,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			}
 			parser.Outgoing.onAIPractice(p)
 		}
+	case outgoing.ClaimPrizeMethod:
+		if parser.Outgoing.onClaimPrize != nil {
+			var e event.Event
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onClaimPrize(e)
+		}
 	case outgoing.DeckSubmitMethod:
 		if parser.Outgoing.onDeckSubmit != nil {
 			var d event.DeckSubmit
@@ -93,7 +105,6 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			}
 			parser.Outgoing.onDrop(e)
 		}
-
 	case outgoing.GetPlayerCourseMethod:
 		if parser.Outgoing.onGetPlayerCourse != nil {
 			var e event.Event
@@ -120,6 +131,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.Outgoing.onJoinQueue(queue)
+		}
+	case outgoing.PayEntryMethod:
+		if parser.Outgoing.onPayEntry != nil {
+			var entry event.PayEntry
+			err := json.Unmarshal(l.Json, &entry)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onPayEntry(entry)
 		}
 
 	case outgoing.CrackBoosterMethod:
@@ -188,6 +208,11 @@ func (outgoing *Outgoing) OnAIPractice(callback func(practice event.AIPractice))
 	outgoing.onAIPractice = callback
 }
 
+// OnClaimPrize attaches the given callback, which will be called on claiming the prize of an event.
+func (outgoing *Outgoing) OnClaimPrize(callback func(event event.Event)) {
+	outgoing.onClaimPrize = callback
+}
+
 // OnJoin attaches the given callback, which will be called on submitting a deck.
 func (outgoing *Outgoing) OnDeckSubmit(callback func(deck event.DeckSubmit)) {
 	outgoing.onDeckSubmit = callback
@@ -211,6 +236,11 @@ func (outgoing *Outgoing) OnJoin(callback func(event event.Event)) {
 // OnJoinQueue attaches the given callback, which will be called on joining an event queue.
 func (outgoing *Outgoing) OnJoinQueue(callback func(queue event.JoinQueue)) {
 	outgoing.onJoinQueue = callback
+}
+
+// OnPayEntry attaches the given callback, which will be called on paying the entry.
+func (outgoing *Outgoing) OnPayEntry(callback func(entry event.PayEntry)) {
+	outgoing.onPayEntry = callback
 }
 
 // OnCrackBooster attaches the given callback, which will be called on the request of retrieving a cracked booster.
@@ -299,6 +329,15 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 			}
 			parser.onPregameSequenceReport(r)
 		}
+	case log.ProgressionRewardWebViewedMsg:
+		if parser.onProgressionRewardWebViewed != nil {
+			var v client.RewardWeb
+			err := json.Unmarshal(payload, &v)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onProgressionRewardWebViewed(v)
+		}
 	case log.ProgressionTrackViewedMsg:
 		if parser.onProgressionTrackViewed != nil {
 			var v client.ProgressionView
@@ -326,7 +365,7 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 			}
 			parser.onSceneChange(c)
 		}
-	case log.SetAvatarSelectoinMsg:
+	case log.SetAvatarSelectionMsg:
 		if parser.onSetAvatarSelection != nil {
 			var s client.AvatarSelection
 			err := json.Unmarshal(payload, &s)
@@ -427,6 +466,11 @@ func (outgoing *Outgoing) OnPerformanceReport(callback func(report client.Perfor
 // matchmaking processes including granular durations of notable events within. Durations are in seconds.
 func (outgoing *Outgoing) OnPregameSequenceReport(callback func(report client.PregameSequenceReport)) {
 	outgoing.onPregameSequenceReport = callback
+}
+
+// OnProgressionRewardWebViewed attaches the given callback, which will be called on viewing the reward web progression.
+func (outgoing *Outgoing) OnProgressionRewardWebViewed(callback func(view client.RewardWeb)) {
+	outgoing.onProgressionRewardWebViewed = callback
 }
 
 // OnProgressionTrackViewed attaches the given callback, which will be called on viewing the track progression.

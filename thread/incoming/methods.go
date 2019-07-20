@@ -7,6 +7,7 @@ const (
 
 	GetCatalogStatusMethod         thread.LogMethod = "PlayerInventory.GetCatalogStatus"
 	AIPracticeMethod               thread.LogMethod = "Event.AIPractice"
+	ClaimPrizeMethod               thread.LogMethod = "Event.ClaimPrize"
 	DeckSubmitMethod               thread.LogMethod = "Event.DeckSubmitV3"
 	DropMethod                     thread.LogMethod = "Event.Drop"
 	GetActiveEventsMethod          thread.LogMethod = "Event.GetActiveEventsV2"
@@ -17,6 +18,7 @@ const (
 	GetSeasonAndRankDetailMethod   thread.LogMethod = "Event.GetSeasonAndRankDetail"
 	JoinMethod                     thread.LogMethod = "Event.Join"
 	LeaveQueueMethod               thread.LogMethod = "Event.LeaveQueue"
+	PayEntryMethod                 thread.LogMethod = "Event.PayEntry"
 	GetDeckListsMethod             thread.LogMethod = "Deck.GetDeckListsV3"
 	GetPreconDeckMethod            thread.LogMethod = "Deck.GetPreconDecks"
 	CrackBoosterMethod             thread.LogMethod = "PlayerInventory.CrackBoostersV3"
