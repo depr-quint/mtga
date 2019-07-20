@@ -1,16 +1,18 @@
 package mtga
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/di-wu/mtga/thread/outgoing"
 	"github.com/di-wu/mtga/thread/outgoing/event"
 	"github.com/di-wu/mtga/thread/outgoing/inventory"
 	"github.com/di-wu/mtga/thread/outgoing/log"
 	"github.com/di-wu/mtga/thread/outgoing/log/client"
 	"github.com/di-wu/mtga/thread/outgoing/log/duel_scene"
+	"github.com/di-wu/mtga/thread/outgoing/mercantile"
 	"github.com/di-wu/mtga/thread/outgoing/quest"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 func TestOutgoing(t *testing.T) {
@@ -47,6 +49,7 @@ func TestOutgoing(t *testing.T) {
 	parser.Outgoing.OnGameStop(func(stop duel_scene.GameStop) {})
 	parser.Outgoing.OnEndOfMatchReport(func(report duel_scene.EndOfMatchReport) {})
 	parser.Outgoing.OnEmotesUsedReport(func(report duel_scene.EmotesUsedReport) {})
+	parser.Outgoing.OnPurchaseProduct(func(purchase mercantile.PurchaseProduct) {})
 	parser.Outgoing.OnGetTrackDetail(func(detail quest.TrackDetail) {})
 
 	// TODO add info log methods

@@ -1,6 +1,10 @@
 package mtga
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/di-wu/mtga/thread/incoming/deck"
 	"github.com/di-wu/mtga/thread/incoming/event"
 	"github.com/di-wu/mtga/thread/incoming/front_door"
@@ -9,9 +13,6 @@ import (
 	"github.com/di-wu/mtga/thread/incoming/mot_d"
 	"github.com/di-wu/mtga/thread/incoming/progression"
 	"github.com/di-wu/mtga/thread/incoming/quest"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 func TestIncoming(t *testing.T) {

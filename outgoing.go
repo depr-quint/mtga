@@ -12,6 +12,7 @@ import (
 	"github.com/di-wu/mtga/thread/outgoing/log"
 	"github.com/di-wu/mtga/thread/outgoing/log/client"
 	"github.com/di-wu/mtga/thread/outgoing/log/duel_scene"
+	"github.com/di-wu/mtga/thread/outgoing/mercantile"
 	"github.com/di-wu/mtga/thread/outgoing/quest"
 )
 
@@ -53,6 +54,8 @@ type Outgoing struct {
 	onGameStop         func(stop duel_scene.GameStop)
 	onEndOfMatchReport func(report duel_scene.EndOfMatchReport)
 	onEmotesUsedReport func(report duel_scene.EmotesUsedReport)
+	// thread/outgoing/mercantile
+	onPurchaseProduct func(purchase mercantile.PurchaseProduct)
 	// thread/outgoing/quest
 	onGetTrackDetail func(detail quest.TrackDetail)
 }
@@ -181,6 +184,16 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		}
 		parser.parseOutgoingLogInfo(info)
 
+	case outgoing.PurchaseProductMethod:
+		if parser.onPurchaseProduct != nil {
+			var purchase mercantile.PurchaseProduct
+			err := json.Unmarshal(l.Json, &purchase)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onPurchaseProduct(purchase)
+		}
+
 	case outgoing.TrackDetailMethod:
 		if parser.Outgoing.onGetTrackDetail != nil {
 			var detail quest.TrackDetail
@@ -261,6 +274,11 @@ func (outgoing *Outgoing) OnLogError(callback func(err log.Err)) {
 // OnLogInfo attaches the given callback, which will be called on an outgoing info log.
 func (outgoing *Outgoing) OnLogInfo(callback func(info log.Info)) {
 	outgoing.onLogInfo = callback
+}
+
+// OnPurchaseProduct attaches the given callback, which will be called on purchasing a product.
+func (outgoing *Outgoing) OnPurchaseProduct(callback func(purchase mercantile.PurchaseProduct)) {
+	outgoing.onPurchaseProduct = callback
 }
 
 // OnGetTrackDetail attaches the given callback, which will be called on the request of retrieving the track details.

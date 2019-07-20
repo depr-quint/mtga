@@ -16,4 +16,6 @@ const (
 	JoinMethod            thread.LogMethod = "Event.Join"
 	JoinQueueMethod       thread.LogMethod = "Event.JoinQueue"
 	PayEntryMethod        thread.LogMethod = "Event.PayEntry"
+
+	PurchaseProductMethod thread.LogMethod = "Mercantile.PurchaseProduct"
 )

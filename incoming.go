@@ -3,6 +3,8 @@ package mtga
 import (
 	"encoding/json"
 	"fmt"
+	panic "log"
+
 	"github.com/di-wu/mtga/thread"
 	"github.com/di-wu/mtga/thread/incoming"
 	"github.com/di-wu/mtga/thread/incoming/deck"
@@ -13,7 +15,6 @@ import (
 	"github.com/di-wu/mtga/thread/incoming/mot_d"
 	"github.com/di-wu/mtga/thread/incoming/progression"
 	"github.com/di-wu/mtga/thread/incoming/quest"
-	panic "log"
 )
 
 // Incoming is a structure that holds the parser's incoming callbacks.
