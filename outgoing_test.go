@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/di-wu/mtga/thread/outgoing"
+	"github.com/di-wu/mtga/thread/outgoing/deck"
 	"github.com/di-wu/mtga/thread/outgoing/event"
 	"github.com/di-wu/mtga/thread/outgoing/inventory"
 	"github.com/di-wu/mtga/thread/outgoing/log"
@@ -20,6 +21,8 @@ func TestOutgoing(t *testing.T) {
 
 	parser := Parser{}
 	parser.Outgoing.OnAuthenticate(func(auth outgoing.Authenticate) {})
+	parser.Outgoing.OnCreateDeck(func(deck deck.CreateDeck) {})
+	parser.Outgoing.OnDeleteDeck(func(deck deck.DeleteDeck) {})
 	parser.Outgoing.OnAIPractice(func(practice event.AIPractice) {})
 	parser.Outgoing.OnClaimPrize(func(event event.Event) {})
 	parser.Outgoing.OnDeckSubmit(func(deck event.DeckSubmit) {})
@@ -34,6 +37,7 @@ func TestOutgoing(t *testing.T) {
 	parser.Outgoing.OnLogInfo(func(info log.Info) {})
 	parser.Outgoing.OnBootSequenceReport(func(report client.BootSequenceReport) {})
 	parser.Outgoing.OnConnected(func(conn client.Connected) {})
+	parser.Outgoing.OnDeckUpdated(func(update client.DeckUpdated) {})
 	parser.Outgoing.OnHomeEventNavigation(func(nav client.EventNavigation) {})
 	parser.Outgoing.OnInventoryReport(func(report client.InventoryReport) {})
 	parser.Outgoing.OnPerformanceReport(func(report client.PerformanceReport) {})

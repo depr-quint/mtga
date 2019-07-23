@@ -5,6 +5,7 @@ import "github.com/di-wu/mtga/thread"
 const (
 	ConnectionDetailsMethod thread.LogMethod = "FrontDoor.ConnectionDetails"
 
+	CreateDeckMethod               thread.LogMethod = "Deck.CreateDeckV3"
 	GetCatalogStatusMethod         thread.LogMethod = "PlayerInventory.GetCatalogStatus"
 	AIPracticeMethod               thread.LogMethod = "Event.AIPractice"
 	ClaimPrizeMethod               thread.LogMethod = "Event.ClaimPrize"

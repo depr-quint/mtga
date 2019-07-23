@@ -8,6 +8,8 @@ const (
 	GetProductCatalogMethod thread.LogMethod = "PlayerInventory.GetProductCatalog"
 	TrackDetailMethod       thread.LogMethod = "Quest.GetTrackDetail"
 
+	CreateDeckMethod      thread.LogMethod = "Deck.CreateDeckV3"
+	DeleteDeckMethod      thread.LogMethod = "Deck.DeleteDeck"
 	AIPracticeMethod      thread.LogMethod = "Event.AIPractice"
 	ClaimPrizeMethod      thread.LogMethod = "Event.ClaimPrize"
 	DeckSubmitMethod      thread.LogMethod = "Event.DeckSubmitV3"

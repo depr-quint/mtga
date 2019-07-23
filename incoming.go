@@ -20,6 +20,7 @@ import (
 // Incoming is a structure that holds the parser's incoming callbacks.
 type Incoming struct {
 	// thread/incoming/deck
+	onCreateDeck     func(deck deck.CreateDeck)
 	onGetDeckLists   func(decks []deck.Deck)
 	onGetPreconDecks func(decks []deck.PreconDeck)
 	// thread/incoming/event
@@ -69,6 +70,15 @@ type Incoming struct {
 
 func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 	switch l.Method {
+	case incoming.CreateDeckMethod:
+		if parser.Incoming.onCreateDeck != nil {
+			var d deck.CreateDeck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onCreateDeck(d)
+		}
 	case incoming.GetDeckListsMethod:
 		if parser.onGetDeckLists != nil {
 			var d []deck.Deck
@@ -456,6 +466,11 @@ func (incoming *Incoming) OnLeaveQueue(callback func(leave event.LeaveQueue)) {
 // OnPayEntry attaches the given callback, which will be called on after paying the entry.
 func (incoming *Incoming) OnPayEntry(callback func(entry event.PayEntry)) {
 	incoming.onPayEntry = callback
+}
+
+// OnCreateDeck attaches the given callback, which will be called on creating a deck.
+func (incoming *Incoming) OnCreateDeck(callback func(deck deck.CreateDeck)) {
+	incoming.onCreateDeck = callback
 }
 
 // OnGetDeckLists attaches the given callback, which will be called on getting the deck lists.

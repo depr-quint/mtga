@@ -20,6 +20,7 @@ func TestIncoming(t *testing.T) {
 
 	parser := Parser{}
 	parser.Incoming.OnConnectionDetails(func(details front_door.ConnectionDetails) {})
+	parser.Incoming.OnCreateDeck(func(deck deck.CreateDeck) {})
 	parser.Incoming.OnGetDeckLists(func(decks []deck.Deck) {})
 	parser.Incoming.OnGetPreconDecks(func(decks []deck.PreconDeck) {})
 	parser.Incoming.OnGetCatalogStatus(func(status inventory.CatalogStatus) {})

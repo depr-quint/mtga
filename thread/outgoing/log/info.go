@@ -12,6 +12,7 @@ type InfoMessage string
 const (
 	BootSequenceReportMsg         InfoMessage = "Client.BootSequenceReport"
 	ConnectedMsg                  InfoMessage = "Client.Connected"
+	DeckUpdatedMsg                InfoMessage = "Client.DeckManager.Deck.Updated"
 	InventoryReportMsg            InfoMessage = "Client.InventoryReport"
 	PerformanceReportMsg          InfoMessage = "Client.PerformanceReport"
 	PregameSequenceReportMsg      InfoMessage = "Client.PregameSequenceReport"

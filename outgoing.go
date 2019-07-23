@@ -7,6 +7,7 @@ import (
 
 	"github.com/di-wu/mtga/thread"
 	"github.com/di-wu/mtga/thread/outgoing"
+	"github.com/di-wu/mtga/thread/outgoing/deck"
 	"github.com/di-wu/mtga/thread/outgoing/event"
 	"github.com/di-wu/mtga/thread/outgoing/inventory"
 	"github.com/di-wu/mtga/thread/outgoing/log"
@@ -20,6 +21,9 @@ import (
 type Outgoing struct {
 	// thread/outgoing
 	onAuthenticate func(auth outgoing.Authenticate)
+	// thread/outgoing/deck
+	onCreateDeck func(deck deck.CreateDeck)
+	onDeleteDeck func(deck deck.DeleteDeck)
 	// thread/outgoing/event
 	onAIPractice      func(practice event.AIPractice)
 	onClaimPrize      func(event event.Event)
@@ -38,6 +42,7 @@ type Outgoing struct {
 	// thread/outgoing/log/client
 	onBootSequenceReport         func(report client.BootSequenceReport)
 	onConnected                  func(conn client.Connected)
+	onDeckUpdated                func(update client.DeckUpdated)
 	onHomeEventNavigation        func(nav client.EventNavigation)
 	onInventoryReport            func(report client.InventoryReport)
 	onPerformanceReport          func(report client.PerformanceReport)
@@ -70,6 +75,25 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.onAuthenticate(auth)
+		}
+
+	case outgoing.CreateDeckMethod:
+		if parser.Outgoing.onCreateDeck != nil {
+			var d deck.CreateDeck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onCreateDeck(d)
+		}
+	case outgoing.DeleteDeckMethod:
+		if parser.onDeleteDeck != nil {
+			var d deck.DeleteDeck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onDeleteDeck(d)
 		}
 
 	case outgoing.AIPracticeMethod:
@@ -216,6 +240,16 @@ func (outgoing *Outgoing) OnAuthenticate(callback func(auth outgoing.Authenticat
 	outgoing.onAuthenticate = callback
 }
 
+// OnCreateDeck attaches the given callback, which will be called on creating a deck.
+func (outgoing *Outgoing) OnCreateDeck(callback func(deck deck.CreateDeck)) {
+	outgoing.onCreateDeck = callback
+}
+
+// OnDeleteDeck attaches the given callback, which will be called on deleting a deck.
+func (outgoing *Outgoing) OnDeleteDeck(callback func(deck deck.DeleteDeck)) {
+	outgoing.onDeleteDeck = callback
+}
+
 // OnAIPractice attaches the given callback, which will be called on practicing with the AI.
 func (outgoing *Outgoing) OnAIPractice(callback func(practice event.AIPractice)) {
 	outgoing.onAIPractice = callback
@@ -310,6 +344,15 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 				panic.Fatalln(err)
 			}
 			parser.onConnected(c)
+		}
+	case log.DeckUpdatedMsg:
+		if parser.onDeckUpdated != nil {
+			var d client.DeckUpdated
+			err := json.Unmarshal(payload, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onDeckUpdated(d)
 		}
 	case log.EventNavigationMsg:
 		if parser.onHomeEventNavigation != nil {
@@ -463,6 +506,11 @@ func (outgoing *Outgoing) OnBootSequenceReport(callback func(report client.BootS
 // OnConnected attaches the given callback, which will be called on connecting.
 func (outgoing *Outgoing) OnConnected(callback func(conn client.Connected)) {
 	outgoing.onConnected = callback
+}
+
+// OnDeckUpdated attaches the given callback, which will be called on updating a deck.
+func (outgoing *Outgoing) OnDeckUpdated(callback func(update client.DeckUpdated)) {
+	outgoing.onDeckUpdated = callback
 }
 
 // OnHomeEventNavigation attaches the given callback, which will be called when the user navigated to an event page from the home page.
