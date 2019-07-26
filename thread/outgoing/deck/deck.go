@@ -1,5 +1,5 @@
 package deck
 
-type CreateDeck struct {
+type Deck struct {
 	Deck string `json:"deck"`
 }

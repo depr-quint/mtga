@@ -7,6 +7,12 @@ This is a tool for monitoring and parsing the MTGA output_log.txt file.
 ```gotemplate
 filepath.Join(os.Getenv("APPDATA"), "..", "LocalLow", "Wizards Of The Coast", "MTGA", "output_log.txt")
 ```
+
+#### Log Example Files
+Jul 25, Update *v0.17*: 
+[PDF](http://magic.wizards.com/sites/mtg/files/output_log_arena.pdf) |
+[TXT](testdata/output_log_0.17.txt)
+
 ### Example
 ```go
 package main

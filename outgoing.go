@@ -8,6 +8,7 @@ import (
 	"github.com/di-wu/mtga/thread"
 	"github.com/di-wu/mtga/thread/outgoing"
 	"github.com/di-wu/mtga/thread/outgoing/deck"
+	"github.com/di-wu/mtga/thread/outgoing/draft"
 	"github.com/di-wu/mtga/thread/outgoing/event"
 	"github.com/di-wu/mtga/thread/outgoing/inventory"
 	"github.com/di-wu/mtga/thread/outgoing/log"
@@ -22,20 +23,27 @@ type Outgoing struct {
 	// thread/outgoing
 	onAuthenticate func(auth outgoing.Authenticate)
 	// thread/outgoing/deck
-	onCreateDeck func(deck deck.CreateDeck)
+	onCreateDeck func(deck deck.Deck)
 	onDeleteDeck func(deck deck.DeleteDeck)
+	onUpdateDeck func(deck deck.Deck)
+	// thread/outgoing/draft
+	onDraftStatus func(status draft.Status)
+	onMakePick    func(pick draft.Pick)
 	// thread/outgoing/event
 	onAIPractice      func(practice event.AIPractice)
 	onClaimPrize      func(event event.Event)
 	onDeckSubmit      func(deck event.DeckSubmit)
 	onDrop            func(event event.Event)
+	onDraft           func(event event.Event)
 	onGetPlayerCourse func(event event.Event)
 	onJoinQueue       func(queue event.JoinQueue)
 	onJoin            func(event event.Event)
 	onPayEntry        func(entry event.PayEntry)
 	// thread/outgoing/inventory
-	onCrackBooster      func(crack inventory.CrackBooster)
-	onGetProductCatalog func(catalog inventory.ProductCatalog)
+	onCrackBooster       func(crack inventory.CrackBooster)
+	onGetProductCatalog  func(catalog inventory.ProductCatalog)
+	onRedeemWildCardBulk func(redeem inventory.WildCardBulk)
+	onSetPetSelection    func(selection inventory.PetSelection)
 	// thread/outgoing/log
 	onLogError func(err log.Err)
 	onLogInfo  func(info log.Info)
@@ -79,7 +87,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 
 	case outgoing.CreateDeckMethod:
 		if parser.Outgoing.onCreateDeck != nil {
-			var d deck.CreateDeck
+			var d deck.Deck
 			err := json.Unmarshal(l.Json, &d)
 			if err != nil {
 				panic.Fatalln(err)
@@ -94,6 +102,34 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.Outgoing.onDeleteDeck(d)
+		}
+	case outgoing.UpdateDeckMethod:
+		if parser.Outgoing.onUpdateDeck != nil {
+			var d deck.Deck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onUpdateDeck(d)
+		}
+
+	case outgoing.DraftStatusMethod:
+		if parser.Outgoing.onDraftStatus != nil {
+			var s draft.Status
+			err := json.Unmarshal(l.Json, &s)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onDraftStatus(s)
+		}
+	case outgoing.MakePickMethod:
+		if parser.Outgoing.onMakePick != nil {
+			var p draft.Pick
+			err := json.Unmarshal(l.Json, &p)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onMakePick(p)
 		}
 
 	case outgoing.AIPracticeMethod:
@@ -131,6 +167,15 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.Outgoing.onDrop(e)
+		}
+	case outgoing.DraftMethod:
+		if parser.Outgoing.onDraft != nil {
+			var e event.Event
+			err := json.Unmarshal(l.Json, &e)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onDraft(e)
 		}
 	case outgoing.GetPlayerCourseMethod:
 		if parser.Outgoing.onGetPlayerCourse != nil {
@@ -187,6 +232,24 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 			}
 			parser.Outgoing.onGetProductCatalog(catalog)
 		}
+	case outgoing.RedeemWildCardBulk:
+		if parser.Outgoing.onRedeemWildCardBulk != nil {
+			var redeem inventory.WildCardBulk
+			err := json.Unmarshal(l.Json, &redeem)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Outgoing.onRedeemWildCardBulk(redeem)
+		}
+	case outgoing.SetPetSelectionMethod:
+		if parser.onSetPetSelection != nil {
+			var selection inventory.PetSelection
+			err := json.Unmarshal(l.Json, &selection)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onSetPetSelection(selection)
+		}
 
 	case thread.LogErrorMethod:
 		if parser.Outgoing.onLogError != nil {
@@ -241,13 +304,28 @@ func (outgoing *Outgoing) OnAuthenticate(callback func(auth outgoing.Authenticat
 }
 
 // OnCreateDeck attaches the given callback, which will be called on creating a deck.
-func (outgoing *Outgoing) OnCreateDeck(callback func(deck deck.CreateDeck)) {
+func (outgoing *Outgoing) OnCreateDeck(callback func(deck deck.Deck)) {
 	outgoing.onCreateDeck = callback
 }
 
 // OnDeleteDeck attaches the given callback, which will be called on deleting a deck.
 func (outgoing *Outgoing) OnDeleteDeck(callback func(deck deck.DeleteDeck)) {
 	outgoing.onDeleteDeck = callback
+}
+
+// OnUpdateDeck attaches the given callback, which will be called on updating a deck.
+func (outgoing *Outgoing) OnUpdateDeck(callback func(deck deck.Deck)) {
+	outgoing.onUpdateDeck = callback
+}
+
+// OnDraftStatus attaches the given callback, which will be called on getting the draft status.
+func (outgoing *Outgoing) OnDraftStatus(callback func(status draft.Status)) {
+	outgoing.onDraftStatus = callback
+}
+
+// OnMakePick attaches the given callback, which will be called on picking a card in draft.
+func (outgoing *Outgoing) OnMakePick(callback func(pick draft.Pick)) {
+	outgoing.onMakePick = callback
 }
 
 // OnAIPractice attaches the given callback, which will be called on practicing with the AI.
@@ -268,6 +346,11 @@ func (outgoing *Outgoing) OnDeckSubmit(callback func(deck event.DeckSubmit)) {
 // OnDrop attaches the given callback, which will be called on dropping an event.
 func (outgoing *Outgoing) OnDrop(callback func(event event.Event)) {
 	outgoing.onDrop = callback
+}
+
+// OnDraft attaches the given callback, which will be called on drafting.
+func (outgoing *Outgoing) OnDraft(callback func(event event.Event)) {
+	outgoing.onDraft = callback
 }
 
 // OnGetPlayerCourse attaches the given callback, which will be called on the request of retrieving the player (v2) courses.
@@ -298,6 +381,16 @@ func (outgoing *Outgoing) OnCrackBooster(callback func(crack inventory.CrackBoos
 // OnGetProductCatalog attaches the given callback, which will be called on the request of retrieving the product catalog.
 func (outgoing *Outgoing) OnGetProductCatalog(callback func(catalog inventory.ProductCatalog)) {
 	outgoing.onGetProductCatalog = callback
+}
+
+// OnRedeemWildCardBulk attaches the given callback, which will be called on redeeming wildcards.
+func (outgoing *Outgoing) OnRedeemWildCardBulk(callback func(redeem inventory.WildCardBulk)) {
+	outgoing.onRedeemWildCardBulk = callback
+}
+
+// OnSetPetSelection attaches the given callback, which will be called on selecting a pet.
+func (outgoing *Outgoing) OnSetPetSelection(callback func(selection inventory.PetSelection)) {
+	outgoing.onSetPetSelection = callback
 }
 
 // OnLogError attaches the given callback, which will be called on an outgoing error log.

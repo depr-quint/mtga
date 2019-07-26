@@ -7,6 +7,7 @@ import (
 
 	"github.com/di-wu/mtga/thread/outgoing"
 	"github.com/di-wu/mtga/thread/outgoing/deck"
+	"github.com/di-wu/mtga/thread/outgoing/draft"
 	"github.com/di-wu/mtga/thread/outgoing/event"
 	"github.com/di-wu/mtga/thread/outgoing/inventory"
 	"github.com/di-wu/mtga/thread/outgoing/log"
@@ -21,8 +22,11 @@ func TestOutgoing(t *testing.T) {
 
 	parser := Parser{}
 	parser.Outgoing.OnAuthenticate(func(auth outgoing.Authenticate) {})
-	parser.Outgoing.OnCreateDeck(func(deck deck.CreateDeck) {})
+	parser.Outgoing.OnCreateDeck(func(deck deck.Deck) {})
 	parser.Outgoing.OnDeleteDeck(func(deck deck.DeleteDeck) {})
+	parser.Outgoing.OnUpdateDeck(func(deck deck.Deck) {})
+	parser.Outgoing.OnDraftStatus(func(status draft.Status) {})
+	parser.Outgoing.OnMakePick(func(pick draft.Pick) {})
 	parser.Outgoing.OnAIPractice(func(practice event.AIPractice) {})
 	parser.Outgoing.OnClaimPrize(func(event event.Event) {})
 	parser.Outgoing.OnDeckSubmit(func(deck event.DeckSubmit) {})
@@ -33,6 +37,8 @@ func TestOutgoing(t *testing.T) {
 	parser.Outgoing.OnPayEntry(func(entry event.PayEntry) {})
 	parser.Outgoing.OnCrackBooster(func(crack inventory.CrackBooster) {})
 	parser.Outgoing.OnGetProductCatalog(func(catalog inventory.ProductCatalog) {})
+	parser.Outgoing.OnRedeemWildCardBulk(func(redeem inventory.WildCardBulk) {})
+	parser.Outgoing.OnSetPetSelection(func(selection inventory.PetSelection) {})
 	parser.Outgoing.OnLogError(func(err log.Err) {})
 	parser.Outgoing.OnLogInfo(func(info log.Info) {})
 	parser.Outgoing.OnBootSequenceReport(func(report client.BootSequenceReport) {})

@@ -8,6 +8,7 @@ import (
 	"github.com/di-wu/mtga/thread"
 	"github.com/di-wu/mtga/thread/incoming"
 	"github.com/di-wu/mtga/thread/incoming/deck"
+	"github.com/di-wu/mtga/thread/incoming/draft"
 	"github.com/di-wu/mtga/thread/incoming/event"
 	"github.com/di-wu/mtga/thread/incoming/front_door"
 	"github.com/di-wu/mtga/thread/incoming/inventory"
@@ -21,12 +22,17 @@ import (
 type Incoming struct {
 	// thread/incoming/deck
 	onCreateDeck     func(deck deck.CreateDeck)
+	onUpdateDeck     func(deck deck.Deck)
 	onGetDeckLists   func(decks []deck.Deck)
 	onGetPreconDecks func(decks []deck.PreconDeck)
+	// thread/incoming/draft
+	onDraftStatus func(status draft.Status)
+	onMakePick    func(pick draft.Status)
 	// thread/incoming/event
 	onClaimPrize               func(claim event.ClaimPrize)
 	onDeckSubmit               func(submit event.DeckSubmit)
 	onDrop                     func(course event.Drop)
+	onDraft                    func(draft event.Draft)
 	onGetActiveEvents          func(events []event.ActiveEvent)
 	onGetCombinedRankInfo      func(info event.CombinedRankInfo)
 	onGetEventAndSeasonPayouts func(payout event.Payout)
@@ -48,6 +54,8 @@ type Incoming struct {
 	onGetPlayerSequenceData func(data inventory.SequenceData)
 	onGetProductCatalog     func(catalog inventory.ProductCatalog)
 	onGetRewardSchedule     func(schedule inventory.RewardSchedule)
+	onRedeemWildCardBulk    func(redeem inventory.WildCardBulk)
+	onGetUpdateBasicLandSet func(update inventory.BasicLandSet)
 	// thread/incoming/log
 	onLogInfo  func(info []byte)
 	onLogError func(message string)
@@ -79,6 +87,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			}
 			parser.Incoming.onCreateDeck(d)
 		}
+	case incoming.UpdateDeckMethod:
+		if parser.Incoming.onUpdateDeck != nil {
+			var d deck.Deck
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onUpdateDeck(d)
+		}
 	case incoming.GetDeckListsMethod:
 		if parser.onGetDeckLists != nil {
 			var d []deck.Deck
@@ -96,6 +113,25 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.onGetPreconDecks(d)
+		}
+
+	case incoming.DraftStatusMethod:
+		if parser.Incoming.onDraftStatus != nil {
+			var s draft.Status
+			err := json.Unmarshal(l.Json, &s)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onDraftStatus(s)
+		}
+	case incoming.MakePickMethod:
+		if parser.Incoming.onMakePick != nil {
+			var p draft.Status
+			err := json.Unmarshal(l.Json, &p)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onMakePick(p)
 		}
 
 	case incoming.ConnectionDetailsMethod:
@@ -153,6 +189,15 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 				panic.Fatalln(err)
 			}
 			parser.Incoming.onDrop(d)
+		}
+	case incoming.DraftMethod:
+		if parser.Incoming.onDraft != nil {
+			var d event.Draft
+			err := json.Unmarshal(l.Json, &d)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onDraft(d)
 		}
 	case incoming.GetActiveEventsMethod:
 		if parser.onGetActiveEvents != nil {
@@ -300,6 +345,24 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 			}
 			parser.onGetRewardSchedule(s)
 		}
+	case incoming.RedeemWildCardBulkMethod:
+		if parser.Incoming.onRedeemWildCardBulk != nil {
+			var r inventory.WildCardBulk
+			err := json.Unmarshal(l.Json, &r)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.Incoming.onRedeemWildCardBulk(r)
+		}
+	case incoming.UpdateBasicLandSetMethod:
+		if parser.onGetUpdateBasicLandSet != nil {
+			var u inventory.BasicLandSet
+			err := json.Unmarshal(l.Json, &u)
+			if err != nil {
+				panic.Fatalln(err)
+			}
+			parser.onGetUpdateBasicLandSet(u)
+		}
 
 	case incoming.GetAllTracksMethod:
 		if parser.onGetAllTracks != nil {
@@ -403,6 +466,16 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 	}
 }
 
+// OnDraftStatus attaches the given callback, which will be called on getting the draft status.
+func (incoming *Incoming) OnDraftStatus(callback func(status draft.Status)) {
+	incoming.onDraftStatus = callback
+}
+
+// OnMakePick attaches the given callback, which will be called on picking a card in draft.
+func (incoming *Incoming) OnMakePick(callback func(draft draft.Status)) {
+	incoming.onMakePick = callback
+}
+
 // OnConnectionDetails attaches the given callback, which will be called on receiving connection details.
 func (incoming *Incoming) OnConnectionDetails(callback func(details front_door.ConnectionDetails)) {
 	incoming.onConnectionDetails = callback
@@ -421,6 +494,11 @@ func (incoming *Incoming) OnDeckSubmit(callback func(submit event.DeckSubmit)) {
 // OnDrop attaches the given callback, which will be called on dropping an event.
 func (incoming *Incoming) OnDrop(callback func(drop event.Drop)) {
 	incoming.onDrop = callback
+}
+
+// OnDraft attaches the given callback, which will be called on drafting.
+func (incoming *Incoming) OnDraft(callback func(draft event.Draft)) {
+	incoming.onDraft = callback
 }
 
 // OnGetActiveEvents attaches the given callback, which will be called on getting all the active events.
@@ -471,6 +549,11 @@ func (incoming *Incoming) OnPayEntry(callback func(entry event.PayEntry)) {
 // OnCreateDeck attaches the given callback, which will be called on creating a deck.
 func (incoming *Incoming) OnCreateDeck(callback func(deck deck.CreateDeck)) {
 	incoming.onCreateDeck = callback
+}
+
+// OnUpdateDeck attaches the given callback, which will be called on updating a deck.
+func (incoming *Incoming) OnUpdateDeck(callback func(deck deck.Deck)) {
+	incoming.onUpdateDeck = callback
 }
 
 // OnGetDeckLists attaches the given callback, which will be called on getting the deck lists.
@@ -526,6 +609,16 @@ func (incoming *Incoming) OnGetProductCatalog(callback func(catalog inventory.Pr
 // OnGetRewardSchedule attaches the given callback, which will be called on getting the reward schedule.
 func (incoming *Incoming) OnGetRewardSchedule(callback func(schedule inventory.RewardSchedule)) {
 	incoming.onGetRewardSchedule = callback
+}
+
+// OnRedeemWildCardBulk attaches the given callback, which will be called on redeeming wildcards.
+func (incoming *Incoming) OnRedeemWildCardBulk(callback func(redeem inventory.WildCardBulk)) {
+	incoming.onRedeemWildCardBulk = callback
+}
+
+// OnUpdateBasicLandSet attaches the given callback, which will be called on updating the basic land set.
+func (incoming *Incoming) OnUpdateBasicLandSet(callback func(update inventory.BasicLandSet)) {
+	incoming.onGetUpdateBasicLandSet = callback
 }
 
 // OnGetMotD attaches the given callback, which will be called on getting the mot d.

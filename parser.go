@@ -31,7 +31,10 @@ func (parser *Parser) Parse(l RawLog) {
 			parser.onThreadLog(threadLog)
 		}
 		parser.parseTreadLog(threadLog)
-	case strings.HasPrefix(first, "[Get SKUs]"),
+	case strings.HasPrefix(first, "<<<"),
+		strings.HasPrefix(first, "XInput"),
+		strings.HasPrefix(first, "NullReferenceException"),
+		strings.HasPrefix(first, "[Get SKUs]"),
 		strings.HasPrefix(first, "[Client GRE]"),
 		strings.HasPrefix(first, "Initialize engine version"),
 		strings.HasPrefix(first, "Fallback handler"),

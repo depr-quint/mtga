@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/di-wu/mtga/thread/incoming/deck"
+	"github.com/di-wu/mtga/thread/incoming/draft"
 	"github.com/di-wu/mtga/thread/incoming/event"
 	"github.com/di-wu/mtga/thread/incoming/front_door"
 	"github.com/di-wu/mtga/thread/incoming/inventory"
@@ -21,12 +22,16 @@ func TestIncoming(t *testing.T) {
 	parser := Parser{}
 	parser.Incoming.OnConnectionDetails(func(details front_door.ConnectionDetails) {})
 	parser.Incoming.OnCreateDeck(func(deck deck.CreateDeck) {})
+	parser.Incoming.OnUpdateDeck(func(deck deck.Deck) {})
 	parser.Incoming.OnGetDeckLists(func(decks []deck.Deck) {})
 	parser.Incoming.OnGetPreconDecks(func(decks []deck.PreconDeck) {})
+	parser.Incoming.OnDraftStatus(func(status draft.Status) {})
+	parser.Incoming.OnMakePick(func(draft draft.Status) {})
 	parser.Incoming.OnGetCatalogStatus(func(status inventory.CatalogStatus) {})
 	parser.Incoming.OnClaimPrize(func(claim event.ClaimPrize) {})
 	parser.Incoming.OnDeckSubmit(func(submit event.DeckSubmit) {})
 	parser.Incoming.OnDrop(func(drop event.Drop) {})
+	parser.Incoming.OnDraft(func(draft event.Draft) {})
 	parser.Incoming.OnGetActiveEvents(func(events []event.ActiveEvent) {})
 	parser.Incoming.OnGetCombinedRankInfo(func(info event.CombinedRankInfo) {})
 	parser.Incoming.OnGetEventAndSeasonPayouts(func(payout event.Payout) {})
@@ -43,6 +48,8 @@ func TestIncoming(t *testing.T) {
 	parser.Incoming.OnGetPlayerSequenceData(func(data inventory.SequenceData) {})
 	parser.Incoming.OnGetProductCatalog(func(catalog inventory.ProductCatalog) {})
 	parser.Incoming.OnGetRewardSchedule(func(schedule inventory.RewardSchedule) {})
+	parser.Incoming.OnRedeemWildCardBulk(func(redeem inventory.WildCardBulk) {})
+	parser.Incoming.OnUpdateBasicLandSet(func(update inventory.BasicLandSet) {})
 	parser.Incoming.OnGetMotD(func(d mot_d.MotD) {})
 	parser.Incoming.OnGetAllTracks(func(tracks []progression.Track) {})
 	parser.Incoming.OnGetPlayerProgress(func(progress progression.PlayerProgress) {})
