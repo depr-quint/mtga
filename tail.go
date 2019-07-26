@@ -133,6 +133,10 @@ func (t *Tail) tail() error {
 				t.logs <- l
 				t.logs <- RawLog{body: []string{trim[1 : len(trim)-1]}}
 				l = RawLog{}
+			} else if strings.HasPrefix(trim, "<<<<<<<<<<") {
+				t.logs <- l
+				t.logs <- RawLog{body: []string{trim}}
+				l = RawLog{}
 			} else {
 				l.body = append(l.body, trim)
 			}
