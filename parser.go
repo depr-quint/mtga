@@ -36,15 +36,17 @@ func (parser *Parser) Parse(l RawLog) {
 		strings.HasPrefix(first, "Initialize engine version"),
 		strings.HasPrefix(first, "Fallback handler"),
 		strings.HasPrefix(first, "Unloading"),
+		strings.HasPrefix(first, "Begin"),
 		strings.HasPrefix(first, "Uploading"),
 		strings.HasPrefix(first, "Setting up"),
 		strings.HasPrefix(first, "WARNING"),
 		strings.HasPrefix(first, "BIError"),
+		strings.HasPrefix(first, "Direct3D"),
 		strings.HasPrefix(first, "System.InvalidOperationException"):
 		// ignore
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s.\n%s\n", first, remaining))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s\n%s\n", first, remaining))
 		}
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 // Tail can monitor data streams and open files, displaying new information as it is written.
@@ -108,11 +109,32 @@ func (t *Tail) tail() error {
 				break
 			}
 
-			if line := strings.TrimSpace(string(s)); line == "" {
+			line := string(s)
+			trim := strings.TrimSpace(line)
+			// empty line
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+
+			// raw log is empty
+			if l.body == nil {
+				l.body = append(l.body, trim)
+				continue
+			}
+
+			if (unicode.IsLetter(rune(line[0])) && strings.ToLower(trim) != "true") ||
+				(unicode.IsNumber(rune(line[0]))) ||
+				(strings.HasPrefix(trim, "[") && len(trim) > 2) {
 				t.logs <- l
+				l = RawLog{
+					body: []string{trim},
+				}
+			} else if strings.HasPrefix(trim, "(") && strings.HasSuffix(trim, ")") {
+				t.logs <- l
+				t.logs <- RawLog{body: []string{trim[1 : len(trim)-1]}}
 				l = RawLog{}
 			} else {
-				l.body = append(l.body, line)
+				l.body = append(l.body, trim)
 			}
 		}
 
