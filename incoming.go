@@ -461,7 +461,7 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 		parser.parseIncomingLogInfo(l.Json)
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed incoming log: %s.\n%s\n", l.Method, l.Json))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed incoming log: %s.\n%s", l.Method, l.Json))
 		}
 	}
 }

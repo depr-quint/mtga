@@ -293,7 +293,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing log: %s.\n%s\n", l.Method, l.Json))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing log: %s.\n%s", l.Method, l.Json))
 		}
 	}
 }
@@ -586,7 +586,7 @@ func (parser *Parser) parseOutgoingLogInfo(l log.Info) {
 
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing info log: %s.\n%s\n", l.MessageName, l.Payload))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing info log: %s.\n%s", l.MessageName, l.Payload))
 		}
 	}
 }

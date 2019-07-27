@@ -2,8 +2,6 @@ package mtga
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/di-wu/mtga/thread"
@@ -13,6 +11,8 @@ import (
 type Parser struct {
 	onZoneChange func(change ZoneChange)
 	// thread
+	onSingleTreadLog func(first string)
+	Single
 	onThreadLog func(log thread.Log)
 	Outgoing
 	Incoming
@@ -27,12 +27,22 @@ func (parser *Parser) Parse(l RawLog) {
 		return
 	}
 
-	first := l.body[0]
-	if strings.HasPrefix(first, "<<<<<<<<<<") {
-		parser.parserZoneChange(first)
-	}
-
+	first := strings.TrimSpace(l.body[0])
 	if len(l.body) == 1 {
+		switch {
+		case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
+			log := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
+			if parser.onSingleTreadLog != nil {
+				parser.onSingleTreadLog(log)
+			}
+			parser.parseSingleTreadLog(log)
+		case strings.HasPrefix(first, "<<<<<<<<<<"):
+			parser.parserZoneChange(first)
+		default:
+			if parser.onUnknownLog != nil {
+				parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s", first))
+			}
+		}
 		return
 	}
 
@@ -43,60 +53,15 @@ func (parser *Parser) Parse(l RawLog) {
 			parser.onThreadLog(threadLog)
 		}
 		parser.parseTreadLog(threadLog)
-	case strings.HasPrefix(first, "XInput"),
-		strings.HasPrefix(first, "NullReferenceException"),
-		strings.HasPrefix(first, "[Get SKUs]"),
-		strings.HasPrefix(first, "[Client GRE]"),
-		strings.HasPrefix(first, "Initialize engine version"),
-		strings.HasPrefix(first, "Fallback handler"),
-		strings.HasPrefix(first, "Unloading"),
-		strings.HasPrefix(first, "Begin"),
-		strings.HasPrefix(first, "Uploading"),
-		strings.HasPrefix(first, "Setting up"),
-		strings.HasPrefix(first, "WARNING"),
-		strings.HasPrefix(first, "BIError"),
-		strings.HasPrefix(first, "Direct3D"),
-		strings.HasPrefix(first, "System.InvalidOperationException"):
-		// ignore
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s\n%s\n", first, remaining))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s\n%s", first, remaining))
 		}
 	}
 }
 
-func (parser *Parser) OnZoneChange(callback func(change ZoneChange)) {
-	parser.onZoneChange = callback
-}
-
-func (parser *Parser) parserZoneChange(first string) {
-	if parser.onZoneChange != nil {
-		str := regexp.MustCompile(`([a-zA-Z]*?) for \[\"([a-zA-Z ,\'-]*?)\" InstanceId:([0-9]*?), GrpId:([0-9]*?)\] \(\".*?\"\) had Instigator ([0-9]*?) \(\"([a-zA-Z ,\'-]*?)\"\)`).FindStringSubmatch(first)
-		if str != nil {
-			instanceId, _ := strconv.Atoi(str[3])
-			grpId, _ := strconv.Atoi(str[4])
-			instigator, _ := strconv.Atoi(str[5])
-			parser.onZoneChange(ZoneChange{
-				Type:       ZoneChangeType(str[1]),
-				Target:     str[2],
-				InstanceId: instanceId,
-				GrpId:      grpId,
-				Instigator: instigator,
-				Source:     str[6],
-			})
-		} else {
-			null := regexp.MustCompile(`([a-zA-Z]*?) for ([0-9]*?) \(\"\[NULL\]\"\) had Instigator ([0-9]*?) \(\"([a-zA-Z ,\'-]*?)\"\)`).FindStringSubmatch(first)
-			instanceId, _ := strconv.Atoi(null[2])
-			instigator, _ := strconv.Atoi(null[3])
-			parser.onZoneChange(ZoneChange{
-				Type:       ZoneChangeType(null[1]),
-				Target:     "NULL",
-				InstanceId: instanceId,
-				Instigator: instigator,
-				Source:     null[4],
-			})
-		}
-	}
+func (parser *Parser) OnSingleTreadLog(callback func(log string)) {
+	parser.onSingleTreadLog = callback
 }
 
 func (parser *Parser) OnTreadLog(callback func(log thread.Log)) {
