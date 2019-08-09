@@ -1,73 +1,146 @@
 package mtga
 
 import (
-	"os"
-	"path/filepath"
+	"github.com/di-wu/mtga/thread/incoming/deck"
+	"github.com/di-wu/mtga/thread/incoming/quest"
 	"testing"
 
-	"github.com/di-wu/mtga/thread/incoming/deck"
-	"github.com/di-wu/mtga/thread/incoming/draft"
-	"github.com/di-wu/mtga/thread/incoming/event"
 	"github.com/di-wu/mtga/thread/incoming/front_door"
-	"github.com/di-wu/mtga/thread/incoming/inventory"
-	"github.com/di-wu/mtga/thread/incoming/mercantile"
-	"github.com/di-wu/mtga/thread/incoming/mot_d"
-	"github.com/di-wu/mtga/thread/incoming/progression"
-	"github.com/di-wu/mtga/thread/incoming/quest"
 )
 
-func TestIncoming(t *testing.T) {
-	filePath := filepath.Join(os.Getenv("APPDATA"), "..", "LocalLow", "Wizards Of The Coast", "MTGA", "output_log.txt")
-
-	parser := Parser{}
-	parser.Incoming.OnConnectionDetails(func(details front_door.ConnectionDetails) {})
-	parser.Incoming.OnCreateDeck(func(deck deck.CreateDeck) {})
-	parser.Incoming.OnUpdateDeck(func(deck deck.Deck) {})
-	parser.Incoming.OnGetDeckLists(func(decks []deck.Deck) {})
-	parser.Incoming.OnGetPreconDecks(func(decks []deck.PreconDeck) {})
-	parser.Incoming.OnDraftStatus(func(status draft.Status) {})
-	parser.Incoming.OnMakePick(func(draft draft.Status) {})
-	parser.Incoming.OnGetCatalogStatus(func(status inventory.CatalogStatus) {})
-	parser.Incoming.OnClaimPrize(func(claim event.ClaimPrize) {})
-	parser.Incoming.OnDeckSubmit(func(submit event.DeckSubmit) {})
-	parser.Incoming.OnDrop(func(drop event.Drop) {})
-	parser.Incoming.OnDraft(func(draft event.Draft) {})
-	parser.Incoming.OnGetActiveEvents(func(events []event.ActiveEvent) {})
-	parser.Incoming.OnGetCombinedRankInfo(func(info event.CombinedRankInfo) {})
-	parser.Incoming.OnGetEventAndSeasonPayouts(func(payout event.Payout) {})
-	parser.Incoming.OnGetPlayerCourses(func(courses []event.Course) {})
-	parser.Incoming.OnJoin(func(course event.Course) {})
-	parser.Incoming.OnLeaveQueue(func(leave event.LeaveQueue) {})
-	parser.Incoming.OnGetSeasonAndRankDetail(func(detail event.SeasonRankAndDetail) {})
-	parser.Incoming.OnPayEntry(func(entry event.PayEntry) {})
-	parser.Incoming.OnCrackBooster(func(booster inventory.CrackedBooster) {})
-	parser.Incoming.OnGetFormats(func(formats []inventory.Format) {})
-	parser.Incoming.OnGetPlayerArtSkins(func(skins inventory.PlayerArtSkins) {})
-	parser.Incoming.OnGetPlayerCards(func(cards inventory.PlayerCards) {})
-	parser.Incoming.OnGetPlayerInventory(func(inventory inventory.PlayerInventory) {})
-	parser.Incoming.OnGetPlayerSequenceData(func(data inventory.SequenceData) {})
-	parser.Incoming.OnGetProductCatalog(func(catalog inventory.ProductCatalog) {})
-	parser.Incoming.OnGetRewardSchedule(func(schedule inventory.RewardSchedule) {})
-	parser.Incoming.OnRedeemWildCardBulk(func(redeem inventory.WildCardBulk) {})
-	parser.Incoming.OnUpdateBasicLandSet(func(update inventory.BasicLandSet) {})
-	parser.Incoming.OnGetMotD(func(d mot_d.MotD) {})
-	parser.Incoming.OnGetAllTracks(func(tracks []progression.Track) {})
-	parser.Incoming.OnGetPlayerProgress(func(progress progression.PlayerProgress) {})
-	parser.Incoming.OnGetAllProducts(func(products []mercantile.Product) {})
-	parser.Incoming.OnGetStoreStatus(func(status mercantile.StoreStatus) {})
-	parser.Incoming.OnGetPlayerQuests(func(quests []quest.PlayerQuest) {})
-	parser.Incoming.OnGetTrackDetail(func(detail quest.TrackDetail) {})
-	parser.Incoming.OnAIPractice(func(success bool) {})
-	parser.Incoming.OnJoinEventQueueStatus(func(status bool) {})
-	parser.Incoming.OnJoinQueue(func(success bool) {})
-	parser.Incoming.OnLogInfo(func(info []byte) {})
-
-	tail, err := NewTail(filePath)
-	if err != nil {
-		t.Error(err)
+func TestIncomingConnectionDetails(t *testing.T) {
+	l := RawLog{
+		Body: []string{
+			`[UnityCrossThreadLogger]1/01/2000 0:00:00 AM`,
+			`<== FrontDoor.ConnectionDetails(0)`,
+			`{`,
+			`	"sessionId": "00000000-0000-0000-0000-000000000000",`,
+			`	"isQueued": "False"`,
+			`}`,
+		},
 	}
+	var callback bool
+	parser := Parser{}
+	parser.Incoming.OnConnectionDetails(func(details front_door.ConnectionDetails) {
+		callback = true
+		if details.SessionId != "00000000-0000-0000-0000-000000000000" || details.IsQueued != "False" {
+			t.Error()
+		}
+	})
+	parser.Parse(l)
+	if !callback {
+		t.Error()
+	}
+}
 
-	for l := range tail.Logs() {
-		parser.Parse(l)
+func TestIncomingGetPreconDecks(t *testing.T) {
+	l := RawLog{
+		Body: []string{
+			`[UnityCrossThreadLogger]1/01/2000 0:00:00 AM`,
+			`<== Deck.GetPreconDecks(0)`,
+			`[`,
+			`	{`,
+			`		"id": "00000000-0000-0000-0000-000000000000",`,
+			`		"name": "?=?Loc/Decks/Precon/Precon_Dimir_Manipulation",`,
+			`		"description": "UB Control",`,
+			`		"format": "precon",`,
+			`		"resourceId": "00000000-0000-0000-0000-000000000000",`,
+			`		"deckTileId": null,`, // TODO: what if not null?
+			`		"mainDeck": [`,
+			`			{`,
+			`				"id": "00000",`,
+			`				"quantity": 4`,
+			`			},`,
+			`			{`,
+			`				"id": "00001",`,
+			`				"quantity": 1`,
+			`			}`,
+			`		],`,
+			`		"sideboard": [`,
+			`			{`,
+			`				"id": "00001",`,
+			`				"quantity": 3`,
+			`			}`,
+			`		],`,
+			`		"lastUpdated": "2000-01-01T00:00:00.0000000Z",`,
+			`		"lockedForUse": true,`,
+			`		"lockedForEdit": true,`,
+			`		"cardBack": null,`,
+			`		"isValid": true`,
+			`	}`,
+			`]`,
+		},
+	}
+	var callback bool
+	parser := Parser{}
+	parser.Incoming.OnGetPreconDecks(func(decks []deck.PreconDeck) {
+		callback = true
+		if len(decks) != 1 {
+			t.Error()
+		}
+		d := decks[0]
+		if d.Description != "UB Control" || len(d.MainDeck) != 2 || len(d.Sideboard) != 1 || d.IsValid == false {
+			t.Error()
+		}
+	})
+	parser.Parse(l)
+	if !callback {
+		t.Error()
+	}
+}
+
+func TestIncomingGetPlayerQuests(t *testing.T) {
+	l := RawLog{
+		Body: []string{
+			`[UnityCrossThreadLogger]1/01/2000 0:00:00 AM`,
+			`<== Quest.GetPlayerQuests(0)`,
+			`[`,
+			`	{`,
+			`		"questId": "00000000-0000-0000-0000-000000000000",`,
+			`		"goal": 20,`,
+			`		"locKey": "Quests/Quest_Simic_Manipulator",`,
+			`		"tileResourceId": "00000000-0000-0000-0000-000000000000",`,
+			`		"treasureResourceId": "00000000-0000-0000-0000-000000000000",`,
+			`		"questTrack": "Default",`,
+			`		"isNewQuest": true,`,
+			`		"endingProgress": 0,`,
+			`		"startingProgress": 0,`,
+			`		"canSwap": true,`,
+			`		"inventoryUpdate": null,`, // TODO: what if not null?
+			`		"chestDescription": {`,
+			`			"image1": "ObjectiveReward_XPCoinLarge",`,
+			`			"image2": null,`,
+			`			"image3": null,`,
+			`			"prefab": "RewardPopup3DIcon_XPCoin",`,
+			`			"referenceId": null,`, // TODO: what if not null?
+			`			"headerLocKey": "MainNav/EventRewards/Gold_And_XP_Reward",`,
+			`			"descriptionLocKey": null,`, // TODO: what if not null?
+			`			"quantity": "500",`,
+			`			"locParams": {`,
+			`				"number1": 500,`,
+			`				"number2": 500`,
+			`			},`,
+			`			"availableDate": "0001-01-01T00:00:00"`,
+			`		},`,
+			`		"hoursWaitAfterComplete": 0`,
+			`	}`,
+			`]`,
+		},
+	}
+	var callback bool
+	parser := Parser{}
+	parser.OnGetPlayerQuests(func(quests []quest.PlayerQuest) {
+		callback = true
+		if len(quests) != 1 {
+			t.Error()
+		}
+		q := quests[0]
+		if q.Goal != 20 || q.CanSwap != true || q.ChestDescription.Image2 != "" {
+			t.Error()
+		}
+	})
+	parser.Parse(l)
+	if !callback {
+		t.Error()
 	}
 }

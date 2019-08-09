@@ -117,8 +117,8 @@ func (t *Tail) tail() error {
 			}
 
 			// raw log is empty
-			if l.body == nil {
-				l.body = append(l.body, trim)
+			if l.Body == nil {
+				l.Body = append(l.Body, trim)
 				continue
 			}
 
@@ -127,18 +127,18 @@ func (t *Tail) tail() error {
 				(strings.HasPrefix(trim, "[") && len(trim) > 2) {
 				t.logs <- l
 				l = RawLog{
-					body: []string{trim},
+					Body: []string{trim},
 				}
 			} else if strings.HasPrefix(trim, "(") && strings.HasSuffix(trim, ")") {
 				t.logs <- l
-				t.logs <- RawLog{body: []string{trim[1 : len(trim)-1]}}
+				t.logs <- RawLog{Body: []string{trim[1 : len(trim)-1]}}
 				l = RawLog{}
 			} else if strings.HasPrefix(trim, "<<<<<<<<<<") {
 				t.logs <- l
-				t.logs <- RawLog{body: []string{trim}}
+				t.logs <- RawLog{Body: []string{trim}}
 				l = RawLog{}
 			} else {
-				l.body = append(l.body, trim)
+				l.Body = append(l.Body, trim)
 			}
 		}
 

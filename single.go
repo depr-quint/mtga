@@ -32,7 +32,7 @@ func (parser *Parser) parseSingleTreadLog(log string) {
 
 				id, err := strconv.Atoi(split[0])
 				if err != nil {
-					panic.Println(err)
+					panic.Fatalln(err)
 				}
 				txt := split[1]
 				skins[id] = txt

@@ -15,7 +15,7 @@ type PlayerQuest struct {
 	EndingProgress         int                  `json:"endingProgress"`
 	StartingProgress       int                  `json:"startingProgress"`
 	CanSwap                bool                 `json:"canSwap"`
-	InventoryUpdate        interface{}          `json:"inventoryUpdate"`
+	InventoryUpdate        string               `json:"inventoryUpdate"`
 	ChestDescription       incoming.Description `json:"chestDescription"`
 	HoursWaitAfterComplete int                  `json:"hoursWaitAfterComplete"`
 }

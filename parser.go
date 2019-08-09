@@ -23,12 +23,12 @@ type Parser struct {
 // Parse parses a raw log (returned by the tails logs channel).
 // It calls the callback that matches that parsed log.
 func (parser *Parser) Parse(l RawLog) {
-	if len(l.body) == 0 {
+	if len(l.Body) == 0 {
 		return
 	}
 
-	first := strings.TrimSpace(l.body[0])
-	if len(l.body) == 1 {
+	first := strings.TrimSpace(l.Body[0])
+	if len(l.Body) == 1 {
 		switch {
 		case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
 			log := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
@@ -46,9 +46,14 @@ func (parser *Parser) Parse(l RawLog) {
 		return
 	}
 
-	switch remaining := l.body[1:]; {
+	switch remaining := l.Body[1:]; {
 	case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
 		threadLog := thread.NewLog(strings.TrimPrefix(first, "[UnityCrossThreadLogger]"), remaining)
+		if threadLog.Type == "" {
+			if parser.onUnknownLog != nil {
+				parser.onUnknownLog(fmt.Sprintf("Unparsed thread log: %s\n%s", first, remaining))
+			}
+		}
 		if parser.onThreadLog != nil {
 			parser.onThreadLog(threadLog)
 		}

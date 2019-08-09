@@ -53,8 +53,9 @@ func NewLog(heading string, body []string) Log {
 		}
 
 		return Log{typ, method, id, raw}
+	default:
+		return Log{}
 	}
-	return Log{}
 }
 
 type LogMethod string

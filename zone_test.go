@@ -4,7 +4,7 @@ import "testing"
 
 func TestChangeZoneNormal(t *testing.T) {
 	l := RawLog{
-		body: []string{`<<<<<<<<<< ZoneChange of type Destroy for ["Law-Rune Enforcer" InstanceId:294, GrpId:67740] ("Law-Rune Enforcer") had Instigator 291 ("Tyrant's Scorn").`},
+		Body: []string{`<<<<<<<<<< ZoneChange of type Destroy for ["Law-Rune Enforcer" InstanceId:294, GrpId:67740] ("Law-Rune Enforcer") had Instigator 291 ("Tyrant's Scorn").`},
 	}
 
 	parser := Parser{}
@@ -19,7 +19,7 @@ func TestChangeZoneNormal(t *testing.T) {
 
 func TestChangeZoneNull(t *testing.T) {
 	l := RawLog{
-		body: []string{`<<<<<<<<<< ZoneChange of type ZeroToughness for 338 ("[NULL]") had Instigator 334 ("Cry of the Carnarium").`},
+		Body: []string{`<<<<<<<<<< ZoneChange of type ZeroToughness for 338 ("[NULL]") had Instigator 334 ("Cry of the Carnarium").`},
 	}
 
 	parser := Parser{}
