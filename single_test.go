@@ -91,3 +91,21 @@ func TestSingleStateChange(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestUnknownSingleLog(t *testing.T) {
+	l := RawLog{
+		Body: []string{`[UnityCrossThreadLogger]UnknownLog`},
+	}
+	var callback bool
+	parser := Parser{}
+	parser.OnUnknownLog(func(message string) {
+		callback = true
+		if message != "Unparsed single log: UnknownLog" {
+			t.Error()
+		}
+	})
+	parser.Parse(l)
+	if !callback {
+		t.Error()
+	}
+}

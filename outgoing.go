@@ -78,7 +78,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.AuthenticateMethod:
 		if (parser.onAuthenticate) != nil {
 			var auth outgoing.Authenticate
-			err := json.Unmarshal(l.Json, &auth)
+			err := json.Unmarshal(l.Raw, &auth)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -88,7 +88,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.CreateDeckMethod:
 		if parser.Outgoing.onCreateDeck != nil {
 			var d deck.Deck
-			err := json.Unmarshal(l.Json, &d)
+			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -97,7 +97,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.DeleteDeckMethod:
 		if parser.onDeleteDeck != nil {
 			var d deck.DeleteDeck
-			err := json.Unmarshal(l.Json, &d)
+			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -106,7 +106,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.UpdateDeckMethod:
 		if parser.Outgoing.onUpdateDeck != nil {
 			var d deck.Deck
-			err := json.Unmarshal(l.Json, &d)
+			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -116,7 +116,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.DraftStatusMethod:
 		if parser.Outgoing.onDraftStatus != nil {
 			var s draft.Status
-			err := json.Unmarshal(l.Json, &s)
+			err := json.Unmarshal(l.Raw, &s)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -125,7 +125,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.MakePickMethod:
 		if parser.Outgoing.onMakePick != nil {
 			var p draft.Pick
-			err := json.Unmarshal(l.Json, &p)
+			err := json.Unmarshal(l.Raw, &p)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -135,7 +135,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.AIPracticeMethod:
 		if parser.Outgoing.onAIPractice != nil {
 			var p event.AIPractice
-			err := json.Unmarshal(l.Json, &p)
+			err := json.Unmarshal(l.Raw, &p)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -144,7 +144,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.ClaimPrizeMethod:
 		if parser.Outgoing.onClaimPrize != nil {
 			var e event.Event
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -153,7 +153,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.DeckSubmitMethod:
 		if parser.Outgoing.onDeckSubmit != nil {
 			var d event.DeckSubmit
-			err := json.Unmarshal(l.Json, &d)
+			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -162,7 +162,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.DropMethod:
 		if parser.Outgoing.onDrop != nil {
 			var e event.Event
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -171,7 +171,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.DraftMethod:
 		if parser.Outgoing.onDraft != nil {
 			var e event.Event
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -180,7 +180,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.GetPlayerCourseMethod:
 		if parser.Outgoing.onGetPlayerCourse != nil {
 			var e event.Event
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -189,7 +189,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.JoinMethod:
 		if parser.Outgoing.onJoin != nil {
 			var e event.Event
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -198,7 +198,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.JoinQueueMethod:
 		if parser.Outgoing.onJoinQueue != nil {
 			var queue event.JoinQueue
-			err := json.Unmarshal(l.Json, &queue)
+			err := json.Unmarshal(l.Raw, &queue)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -207,7 +207,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.PayEntryMethod:
 		if parser.Outgoing.onPayEntry != nil {
 			var entry event.PayEntry
-			err := json.Unmarshal(l.Json, &entry)
+			err := json.Unmarshal(l.Raw, &entry)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -217,7 +217,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.CrackBoosterMethod:
 		if parser.Outgoing.onCrackBooster != nil {
 			var crack inventory.CrackBooster
-			err := json.Unmarshal(l.Json, &crack)
+			err := json.Unmarshal(l.Raw, &crack)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -226,7 +226,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.GetProductCatalogMethod:
 		if parser.Outgoing.onGetProductCatalog != nil {
 			var catalog inventory.ProductCatalog
-			err := json.Unmarshal(l.Json, &catalog)
+			err := json.Unmarshal(l.Raw, &catalog)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -235,7 +235,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.RedeemWildCardBulk:
 		if parser.Outgoing.onRedeemWildCardBulk != nil {
 			var redeem inventory.WildCardBulk
-			err := json.Unmarshal(l.Json, &redeem)
+			err := json.Unmarshal(l.Raw, &redeem)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -244,7 +244,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.SetPetSelectionMethod:
 		if parser.onSetPetSelection != nil {
 			var selection inventory.PetSelection
-			err := json.Unmarshal(l.Json, &selection)
+			err := json.Unmarshal(l.Raw, &selection)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -254,7 +254,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case thread.LogErrorMethod:
 		if parser.Outgoing.onLogError != nil {
 			var e log.Err
-			err := json.Unmarshal(l.Json, &e)
+			err := json.Unmarshal(l.Raw, &e)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -262,7 +262,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 		}
 	case thread.LogInfoMethod:
 		var info log.Info
-		err := json.Unmarshal(l.Json, &info)
+		err := json.Unmarshal(l.Raw, &info)
 		if err != nil {
 			panic.Fatalln(err)
 		}
@@ -274,7 +274,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.PurchaseProductMethod:
 		if parser.onPurchaseProduct != nil {
 			var purchase mercantile.PurchaseProduct
-			err := json.Unmarshal(l.Json, &purchase)
+			err := json.Unmarshal(l.Raw, &purchase)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -284,7 +284,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 	case outgoing.TrackDetailMethod:
 		if parser.Outgoing.onGetTrackDetail != nil {
 			var detail quest.TrackDetail
-			err := json.Unmarshal(l.Json, &detail)
+			err := json.Unmarshal(l.Raw, &detail)
 			if err != nil {
 				panic.Fatalln(err)
 			}
@@ -293,7 +293,7 @@ func (parser *Parser) parseOutgoingThreadLog(l thread.Log) {
 
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing log: %s.\n%s", l.Method, l.Json))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed outgoing log: %s.\n%s", l.Method, l.Raw))
 		}
 	}
 }

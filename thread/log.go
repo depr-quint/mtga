@@ -1,6 +1,7 @@
 package thread
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"regexp"
@@ -13,12 +14,12 @@ import (
 //	// FORMAT
 //	[UnityCrossThreadLogger] ...
 //	==> Method(Id):
-//	{Json}
+//	{Raw}
 type Log struct {
 	Type   LogType
 	Method LogMethod
 	Id     int
-	Json   []byte
+	Raw    []byte
 }
 
 func NewLog(heading string, body []string) Log {
@@ -31,12 +32,10 @@ func NewLog(heading string, body []string) Log {
 		typ = Incoming
 	}
 
-	switch typ {
-	case Outgoing, Incoming:
+	if typ == Outgoing || typ == Incoming {
 		method := LogMethod(regexp.MustCompile(`[a-zA-Z0-9.]+`).FindStringSubmatch(first)[0])
 		id, _ := strconv.Atoi(regexp.MustCompile(`\(([0-9]+)\)`).FindStringSubmatch(first)[1])
 		str := strings.TrimSpace(strings.Join(remaining, " "))
-
 		var raw []byte
 		if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") && typ == Outgoing {
 			var m map[string]interface{}
@@ -51,11 +50,55 @@ func NewLog(heading string, body []string) Log {
 		} else {
 			raw = []byte(str)
 		}
-
-		return Log{typ, method, id, raw}
-	default:
-		return Log{}
+		return Log{Type: typ, Method: method, Id: id, Raw: raw}
 	}
+
+	if strings.HasPrefix(heading, "ConnectResp") {
+		return Log{Type: ConnectResp, Raw: []byte(strings.Join(append([]string{"{"}, body...), " "))}
+	}
+
+	if strings.HasPrefix(heading, "Received unhandled GREMessageType") {
+		method := LogMethod(strings.TrimPrefix(heading, "Received unhandled GREMessageType: "))
+		return Log{Type: Unhandled, Method: method, Raw: []byte(strings.Join(body, " "))}
+	}
+
+	if len(strings.Split(heading, ":")) == 3 {
+		str := strings.Split(first, " ")
+		method, surplus := LogMethod(str[2]), str[3]
+		if surplus == "[]" {
+			return Log{}
+		}
+		return Log{Type: MinusOne, Method: method, Raw: []byte(strings.Join(append([]string{surplus}, remaining...), " "))}
+	}
+
+	if str := strings.Split(heading, ": "); len(str) == 3 {
+		var raw []byte
+		var m map[string]interface{}
+		err := json.Unmarshal([]byte(strings.Join(body, " ")), &m)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		match, method := str[1], LogMethod(str[2])
+		if strings.HasPrefix(match, MatchTo) {
+			bts := []byte(method) // lowercase first letter
+			lc := bytes.ToLower([]byte{bts[0]})
+			rest := bts[1:]
+			raw, err = json.Marshal(m[string(bytes.Join([][]byte{lc, rest}, nil))])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			typ = MatchTo
+		} else if strings.HasSuffix(match, ToMatch) {
+			raw, err = json.Marshal(m["payload"])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			typ = ToMatch
+		}
+		return Log{Type: typ, Method: method, Raw: raw}
+	}
+
+	return Log{}
 }
 
 type LogMethod string
@@ -68,6 +111,11 @@ const (
 type LogType string
 
 const (
-	Outgoing = "==>"
-	Incoming = "<=="
+	Outgoing    = "==>"
+	Incoming    = "<=="
+	ConnectResp = "ConnectResp"
+	Unhandled   = "Received unhandled GREMessageType"
+	MinusOne    = "(-1)"
+	ToMatch     = "to Match"
+	MatchTo     = "Match to"
 )

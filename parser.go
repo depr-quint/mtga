@@ -16,6 +16,11 @@ type Parser struct {
 	onThreadLog func(log thread.Log)
 	Outgoing
 	Incoming
+	ConnectResp
+	Unhandled
+	MinusOne
+	ToMatch
+	MatchTo
 	// unknown
 	onUnknownLog func(message string)
 }
@@ -74,7 +79,7 @@ func (parser *Parser) OnTreadLog(callback func(log thread.Log)) {
 }
 
 func (parser *Parser) parseTreadLog(l thread.Log) {
-	if len(l.Json) <= 2 {
+	if len(l.Raw) <= 2 {
 		return
 	}
 
@@ -83,9 +88,19 @@ func (parser *Parser) parseTreadLog(l thread.Log) {
 		parser.parseOutgoingThreadLog(l)
 	case thread.Incoming:
 		parser.parseIncomingThreadLog(l)
+	case thread.ConnectResp:
+		parser.parseConnectRespThreadLog(l)
+	case thread.Unhandled:
+		parser.parseUnhandledThreadLog(l)
+	case thread.MinusOne:
+		parser.parseMinusOneThreadLog(l)
+	case thread.ToMatch:
+		parser.parseToMatchThreadLog(l)
+	case thread.MatchTo:
+		parser.parseMatchToThreadLog(l)
 	default:
 		if parser.onUnknownLog != nil {
-			parser.onUnknownLog(fmt.Sprintf("Unparsed thread log: %s.\n", l.Type))
+			parser.onUnknownLog(fmt.Sprintf("Unparsed thread log: %s\n%s", l.Type, string(l.Raw)))
 		}
 	}
 }
