@@ -1,11 +1,13 @@
 package match_to
 
+import "github.com/di-wu/mtga/thread"
+
 type GreToClientEvent struct {
 	GreToClientMessages []Response `json:"greToClientMessages"`
 }
 
 type Response struct {
-	Type                    string               `json:"type"`
+	Type                    thread.LogMethod     `json:"type"`
 	SystemSeatIds           []int                `json:"systemSeatIds"`
 	MsgId                   int                  `json:"msgId"`
 	GameStateId             int                  `json:"gameStateId"`
@@ -26,7 +28,7 @@ type Response struct {
 	SelectTargetsReq        *Select              `json:"selectTargetsReq"`
 	AllowCancel             *string              `json:"allow_cancel"`
 	AllowUndo               *bool                `json:"allow_undo"`
-	IntermissionReq         *IntermissionReq      `json:"intermissionReq"`
+	IntermissionReq         *IntermissionReq     `json:"intermissionReq"`
 }
 
 type ConnectResp struct {

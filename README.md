@@ -50,6 +50,14 @@ func main()  {
 }
 ```
 
+### Unimplemented Logs
+There are probably still some logs that don't have a callback or are just not that relevant.
+```gotemplate
+parser.OnUnknownLog(func(message string) {
+    log.Println(message)
+})
+```
+
 ## MTGA Card API
 [Scryfall API](https://scryfall.com/docs/api) |
 [Arena Endpoint](https://scryfall.com/docs/api/cards/arena)

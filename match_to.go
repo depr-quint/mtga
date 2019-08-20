@@ -10,8 +10,9 @@ import (
 )
 
 type MatchTo struct {
-	onAuthenticateResponse func(response match_to.AuthenticateResponse)
-	onGreToClientEvent     func(gre match_to.GreToClientEvent)
+	onAuthenticateResponse           func(response match_to.AuthenticateResponse)
+	onGreToClientEvent               func(gre match_to.GreToClientEvent)
+	onMatchGameRoomStateChangedEvent func(change match_to.RoomStateChange)
 
 	onGreConnectResp            func(resp match_to.ConnectResp)
 	onGreDieRollResultsResp     func(resp match_to.DieRollResultsResp)
@@ -54,8 +55,19 @@ func (parser *Parser) parseMatchToThreadLog(l thread.Log) {
 		for _, resp := range gre.GreToClientMessages {
 			parser.parseGreResponse(resp)
 		}
+	case match_to.MatchGameRoomStateChangedEventMethod:
+		var change match_to.RoomStateChange
+		err := json.Unmarshal(l.Raw, &change)
+		if err != nil {
+			panic.Fatalln(err)
+		}
+		if parser.onMatchGameRoomStateChangedEvent != nil {
+			parser.onMatchGameRoomStateChangedEvent(change)
+		}
 	default:
-		// fmt.Println(l.Method, string(l.Raw))
+		if parser.onUnknownLog != nil {
+			parser.onUnknownLog(fmt.Sprintf("Unparsed match to log: %s.\n%s", l.Method, l.Raw))
+		}
 	}
 }
 
@@ -69,70 +81,70 @@ func (to *MatchTo) OnGreToClientEvent(callback func(gre match_to.GreToClientEven
 
 func (parser *Parser) parseGreResponse(resp match_to.Response) {
 	switch resp.Type {
-	case "GREMessageType_ConnectResp":
+	case match_to.GreConnectRespMethod:
 		if parser.onGreConnectResp != nil && resp.ConnectResp != nil {
 			parser.onGreConnectResp(*resp.ConnectResp)
 		}
-	case "GREMessageType_DieRollResultsResp":
+	case match_to.GreDieRollResultsRespMethod:
 		if parser.onGreDieRollResultsResp != nil && resp.DieRollResultsResp != nil {
 			parser.onGreDieRollResultsResp(*resp.DieRollResultsResp)
 		}
-	case "GREMessageType_GameStateMessage":
+	case match_to.GreGameStateMessageMethodMethod:
 		if parser.onGreGameStateMessage != nil && resp.GameStateMessage != nil {
 			parser.onGreGameStateMessage(*resp.GameStateMessage)
 		}
-	case "GREMessageType_QueuedGameStateMessage":
+	case match_to.GreQueuedGameStateMessageMethod:
 		if parser.onGreQueuedGameStateMessage != nil && resp.GameStateMessage != nil {
 			parser.onGreQueuedGameStateMessage(*resp.GameStateMessage)
 		}
-	case "GREMessageType_GetSettingsResp":
+	case match_to.GreGetSettingsRespMethod:
 		if parser.onGreGetSettingsResp != nil && resp.GetSettingsResp != nil {
 			parser.onGreGetSettingsResp(*resp.GetSettingsResp)
 		}
-	case "GREMessageType_SetSettingsResp":
+	case match_to.GreSetSettingsRespMethod:
 		if parser.onGreSetSettingsResp != nil && resp.SetSettingsResp != nil {
 			parser.onGreSetSettingsResp(*resp.SetSettingsResp)
 		}
-	case "GREMessageType_PromptReq":
+	case match_to.GrePromptReqMethod:
 		if parser.onGrePromptReq != nil && resp.Prompt != nil {
 			parser.onGrePromptReq(*resp.Prompt)
 		}
-	case "GREMessageType_MulliganReq":
+	case match_to.GreMulliganReqMethod:
 		if parser.onGreMulliganReq != nil && resp.Prompt != nil &&
 			resp.MulliganReq != nil && resp.NonDecisionPlayerPrompt != nil {
 			parser.onGreMulliganReq(*resp.Prompt, *resp.NonDecisionPlayerPrompt, *resp.MulliganReq)
 		}
-	case "GREMessageType_TimerStateMessage":
+	case match_to.GreTimerStateMessageMethod:
 		if parser.onGreTimerStateMessage != nil && resp.TimerStateMessage != nil {
 			parser.onGreTimerStateMessage(*resp.TimerStateMessage)
 		}
-	case "GREMessageType_UIMessage":
+	case match_to.GreUIMessageMethod:
 		if parser.onGreUIMessage != nil && resp.UiMessage != nil {
 			parser.onGreUIMessage(*resp.UiMessage)
 		}
-	case "GREMessageType_ActionsAvailableReq":
+	case match_to.GreActionsAvailableReqMethod:
 		if parser.onGreActionsAvailableReq != nil && resp.Prompt != nil && resp.ActionsAvailableReq != nil {
 			parser.onGreActionsAvailableReq(*resp.Prompt, *resp.ActionsAvailableReq)
 		}
-	case "GREMessageType_DeclareAttackersReq":
+	case match_to.GreDeclareAttackersReMethod:
 		if parser.onGreDeclareAttackersReq != nil && resp.Prompt != nil && resp.DeclareAttackersReq != nil {
 			parser.onGreDeclareAttackersReq(*resp.Prompt, *resp.DeclareAttackersReq)
 		}
-	case "GREMessageType_SubmitAttackersResp":
+	case match_to.GreSubmitAttackersRespMethod:
 		if parser.onGreSubmitAttackersResp != nil && resp.Prompt != nil &&
 			resp.SubmitAttackersResp != nil && resp.NonDecisionPlayerPrompt != nil {
 			parser.onGreSubmitAttackersResp(*resp.Prompt, *resp.NonDecisionPlayerPrompt, *resp.SubmitAttackersResp)
 		}
-	case "GREMessageType_SubmitTargetsResp":
+	case match_to.GreSubmitTargetsRespMethod:
 		if parser.onGreSubmitTargetsResp != nil && resp.SubmitTargetsResp != nil {
 			parser.onGreSubmitTargetsResp(*resp.SubmitTargetsResp)
 		}
-	case "GREMessageType_SelectTargetsReq":
+	case match_to.GreSelectTargetsReqMethod:
 		if parser.onGreSelectTargetsReq != nil && resp.Prompt != nil && resp.SelectTargetsReq != nil &&
 			resp.NonDecisionPlayerPrompt != nil && resp.AllowCancel != nil && resp.AllowUndo != nil {
 			parser.onGreSelectTargetsReq(*resp.Prompt, *resp.NonDecisionPlayerPrompt, *resp.SelectTargetsReq, *resp.AllowCancel, *resp.AllowUndo)
 		}
-	case "GREMessageType_IntermissionReq":
+	case match_to.GreIntermissionReqMethod:
 		if parser.onGreIntermissionReq != nil && resp.IntermissionReq != nil {
 			parser.onGreIntermissionReq(*resp.IntermissionReq)
 		}
