@@ -142,3 +142,67 @@ func (parser *Parser) parseGreResponse(resp match_to.Response) {
 		}
 	}
 }
+
+func (to *MatchTo) OnGreConnectResp(callback func(resp match_to.ConnectResp)) {
+	to.onGreConnectResp = callback
+}
+
+func (to *MatchTo) OnGreDieRollResultsResp(callback func(resp match_to.DieRollResultsResp)) {
+	to.onGreDieRollResultsResp = callback
+}
+
+func (to *MatchTo) OnGreGameStateMessage(callback func(msg match_to.GameStateMessage)) {
+	to.onGreGameStateMessage = callback
+}
+
+func (to *MatchTo) OnGreQueuedGameStateMessage(callback func(msg match_to.GameStateMessage)) {
+	to.onGreQueuedGameStateMessage = callback
+}
+
+func (to *MatchTo) OnGreGetSettingsResp(callback func(resp match_to.Settings)) {
+	to.onGreGetSettingsResp = callback
+}
+
+func (to *MatchTo) OnGreSetSettingsResp(callback func(resp match_to.Settings)) {
+	to.onGreSetSettingsResp = callback
+}
+
+func (to *MatchTo) OnGrePromptReq(callback func(req match_to.Prompt)) {
+	to.onGrePromptReq = callback
+}
+
+func (to *MatchTo) OnGreMulliganReq(callback func(prompt, nonDecision match_to.Prompt, req match_to.MulliganReq)) {
+	to.onGreMulliganReq = callback
+}
+
+func (to *MatchTo) OnGreTimerStateMessage(callback func(msg match_to.TimerStateMessage)) {
+	to.onGreTimerStateMessage = callback
+}
+
+func (to *MatchTo) OnGreUIMessage(callback func(msg match_to.UiMessage)) {
+	to.onGreUIMessage = callback
+}
+
+func (to *MatchTo) OnGreActionsAvailableReq(callback func(prompt match_to.Prompt, req match_to.ActionsAvailableReq)) {
+	to.onGreActionsAvailableReq = callback
+}
+
+func (to *MatchTo) OnGreDeclareAttackersReq(callback func(prompt match_to.Prompt, req match_to.DeclareAttackersReq)) {
+	to.onGreDeclareAttackersReq = callback
+}
+
+func (to *MatchTo) OnGreSubmitTargetsResp(callback func(submit match_to.Submit)) {
+	to.onGreSubmitTargetsResp = callback
+}
+
+func (to *MatchTo) OnGreSubmitAttackersResp(callback func(prompt, nonDecision match_to.Prompt, submit match_to.Submit)) {
+	to.onGreSubmitAttackersResp = callback
+}
+
+func (to *MatchTo) OnGreSelectTargetsReq(callback func(prompt, nonDecision match_to.Prompt, targets match_to.Select, allowCancel string, allowUndo bool)) {
+	to.onGreSelectTargetsReq = callback
+}
+
+func (to *MatchTo) OnGreIntermissionReq(callback func(req match_to.IntermissionReq)) {
+	to.onGreIntermissionReq = callback
+}
