@@ -1,6 +1,6 @@
 package event
 
 type LeaveQueue struct {
-	DidDrop       bool        `json:"didDrop"`
-	ActiveMatches interface{} `json:"activeMatches"`
+	DidDrop       bool   `json:"didDrop"`
+	ActiveMatches string `json:"activeMatches"`
 }

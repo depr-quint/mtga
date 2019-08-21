@@ -5,18 +5,16 @@ import (
 )
 
 type SeasonRankAndDetail struct {
-	CurrentSeason       CurrentSeason `json:"currentSeason"`
-	LimitedRankInfo     []RankInfo    `json:"limitedRankInfo"`
-	ConstructedRankInfo []RankInfo    `json:"constructedRankInfo"`
-}
-
-type CurrentSeason struct {
-	SeasonOrdinal            int    `json:"seasonOrdinal"`
-	SeasonStartTime          string `json:"seasonStartTime"`
-	SeasonEndTime            string `json:"seasonEndTime"`
-	SeasonLimitedRewards     Season `json:"seasonLimitedRewards"`
-	SeasonConstructedRewards Season `json:"seasonConstructedRewards"`
-	MinMatches               int    `json:"minMatches"`
+	CurrentSeason struct {
+		SeasonOrdinal            int    `json:"seasonOrdinal"`
+		SeasonStartTime          string `json:"seasonStartTime"`
+		SeasonEndTime            string `json:"seasonEndTime"`
+		SeasonLimitedRewards     Season `json:"seasonLimitedRewards"`
+		SeasonConstructedRewards Season `json:"seasonConstructedRewards"`
+		MinMatches               int    `json:"minMatches"`
+	} `json:"currentSeason"`
+	LimitedRankInfo     []RankInfo `json:"limitedRankInfo"`
+	ConstructedRankInfo []RankInfo `json:"constructedRankInfo"`
 }
 
 type Season struct {

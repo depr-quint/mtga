@@ -21,7 +21,7 @@ import (
 // Incoming is a structure that holds the parser's incoming callbacks.
 type Incoming struct {
 	// thread/incoming/deck
-	onCreateDeck     func(deck deck.CreateDeck)
+	onCreateDeck     func(deck deck.Deck)
 	onUpdateDeck     func(deck deck.Deck)
 	onGetDeckLists   func(decks []deck.Deck)
 	onGetPreconDecks func(decks []deck.PreconDeck)
@@ -31,7 +31,7 @@ type Incoming struct {
 	// thread/incoming/event
 	onClaimPrize               func(claim event.ClaimPrize)
 	onDeckSubmit               func(submit event.DeckSubmit)
-	onDrop                     func(course event.Drop)
+	onDrop                     func(course event.Course)
 	onDraft                    func(draft event.Draft)
 	onGetActiveEvents          func(events []event.ActiveEvent)
 	onGetCombinedRankInfo      func(info event.CombinedRankInfo)
@@ -80,7 +80,7 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 	switch l.Method {
 	case incoming.CreateDeckMethod:
 		if parser.Incoming.onCreateDeck != nil {
-			var d deck.CreateDeck
+			var d deck.Deck
 			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
@@ -183,7 +183,7 @@ func (parser *Parser) parseIncomingThreadLog(l thread.Log) {
 		}
 	case incoming.DropMethod:
 		if parser.Incoming.onDrop != nil {
-			var d event.Drop
+			var d event.Course
 			err := json.Unmarshal(l.Raw, &d)
 			if err != nil {
 				panic.Fatalln(err)
@@ -492,7 +492,7 @@ func (incoming *Incoming) OnDeckSubmit(callback func(submit event.DeckSubmit)) {
 }
 
 // OnDrop attaches the given callback, which will be called on dropping an event.
-func (incoming *Incoming) OnDrop(callback func(drop event.Drop)) {
+func (incoming *Incoming) OnDrop(callback func(drop event.Course)) {
 	incoming.onDrop = callback
 }
 
@@ -547,7 +547,7 @@ func (incoming *Incoming) OnPayEntry(callback func(entry event.PayEntry)) {
 }
 
 // OnCreateDeck attaches the given callback, which will be called on creating a deck.
-func (incoming *Incoming) OnCreateDeck(callback func(deck deck.CreateDeck)) {
+func (incoming *Incoming) OnCreateDeck(callback func(deck deck.Deck)) {
 	incoming.onCreateDeck = callback
 }
 
