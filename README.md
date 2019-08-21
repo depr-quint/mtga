@@ -1,6 +1,7 @@
 # MTGA Output Log Parser
 This is a tool for monitoring and parsing the MTGA output_log.txt file. 
 
+[![CircleCI](https://circleci.com/gh/di-wu/mtga/tree/master.svg?style=svg)](https://circleci.com/gh/di-wu/mtga/tree/master)
 [![GoDoc](https://godoc.org/github.com/di-wu/mtga?status.svg)](https://godoc.org/github.com/di-wu/mtga)
 ## Getting Started
 ### Log Location
