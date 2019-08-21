@@ -7,8 +7,7 @@ import (
 )
 
 func TestConnectResp(t *testing.T) {
-	l := RawLog{
-		Body: []string{
+	l := []string{
 			`[UnityCrossThreadLogger]ConnectResp {`,
 			`	"type": "GREMessageType_ConnectResp",`,
 			`	"systemSeatIds": [1],`,
@@ -51,11 +50,11 @@ func TestConnectResp(t *testing.T) {
 			`		}`,
 			`	}`,
 			`}`,
-		},
+
 	}
 	var callback bool
 	parser := Parser{}
-	parser.OnConnectResp(func(resp connect_resp.Response) {
+	parser.OnConnectResponse(func(resp connect_resp.Response) {
 		callback = true
 		if resp.MsgId != 2 || resp.ConnectResp.BuildVer != 9066 {
 			t.Error()

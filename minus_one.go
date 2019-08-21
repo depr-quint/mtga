@@ -9,6 +9,7 @@ import (
 	"github.com/di-wu/mtga/thread/minus_one"
 )
 
+// MinusOne is a structure that holds the parser's minus one callbacks.
 type MinusOne struct {
 	onEventMatchCreated    func(match minus_one.MatchCreated)
 	onTrackProgressUpdated func(update []minus_one.TrackProgress)
@@ -61,18 +62,22 @@ func (parser *Parser) parseMinusOneThreadLog(l thread.Log) {
 	}
 }
 
+// OnEventMatchCreated attaches the given callback, which will be called on creating an event match.
 func (one *MinusOne) OnEventMatchCreated(callback func(match minus_one.MatchCreated)) {
 	one.onEventMatchCreated = callback
 }
 
+// OnTrackProgressUpdated attaches the given callback, which will be called on updating the track progress.
 func (one *MinusOne) OnTrackProgressUpdated(callback func(update []minus_one.TrackProgress)) {
 	one.onTrackProgressUpdated = callback
 }
 
+// OnInventoryUpdated attaches the given callback, which will be called on updating the inventory.
 func (one *MinusOne) OnInventoryUpdated(callback func(update minus_one.InventoryUpdate)) {
 	one.onInventoryUpdated = callback
 }
 
+// OnRankUpdated attaches the given callback, which will be called on updating the rank.
 func (one *MinusOne) OnRankUpdated(callback func(update minus_one.RankUpdate)) {
 	one.onRankUpdated = callback
 }

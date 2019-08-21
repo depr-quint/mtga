@@ -11,6 +11,7 @@ import (
 	"github.com/di-wu/mtga/thread/single"
 )
 
+// Single is a structure that holds the parser's single line callbacks.
 type Single struct {
 	onSkinSeen     func(skins single.Skins)
 	onCardNotExist func(card single.NotExist)
@@ -41,13 +42,13 @@ func (parser *Parser) parseSingleTreadLog(log string) {
 		}
 	case strings.HasPrefix(log, "Card #"):
 		if parser.onCardNotExist != nil {
-			str := regexp.MustCompile(`#([0-9]*?) \(\"([a-zA-Z ,\'-]*?)\"\) had ParentId #([0-9]*?) `).FindStringSubmatch(log)
-			cardId, _ := strconv.Atoi(str[1])
-			parentId, _ := strconv.Atoi(str[3])
+			str := regexp.MustCompile(`#([0-9]*?) \(\"([a-zA-Z ,\'-]*?)\"\) had ParentID #([0-9]*?) `).FindStringSubmatch(log)
+			cardID, _ := strconv.Atoi(str[1])
+			parentID, _ := strconv.Atoi(str[3])
 			parser.onCardNotExist(single.NotExist{
-				CardId:   cardId,
+				CardID:   cardID,
 				CardName: str[2],
-				ParentId: parentId,
+				ParentID: parentID,
 			})
 		}
 	case strings.HasPrefix(log, "NULL entity on"):
@@ -72,18 +73,22 @@ func (parser *Parser) parseSingleTreadLog(log string) {
 	}
 }
 
+// OnSkinsSeen attaches the given callback, which will be called on seeing skins.
 func (single *Single) OnSkinsSeen(callback func(skins single.Skins)) {
 	single.onSkinSeen = callback
 }
 
+// OnCardNotExist attaches the given callback, which will be called on a not existing card.
 func (single *Single) OnCardNotExist(callback func(card single.NotExist)) {
 	single.onCardNotExist = callback
 }
 
+// OnNullEntity attaches the given callback, which will be called on a null entity.
 func (single *Single) OnNullEntity(callback func(null single.NullEntity)) {
 	single.onNullEntity = callback
 }
 
+// OnStateChange attaches the given callback, which will be called on a the state change.
 func (single *Single) OnStateChange(callback func(from, to string)) {
 	single.onStateChange = callback
 }

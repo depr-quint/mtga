@@ -1,13 +1,10 @@
 package mtga
 
 import (
-	"os"
 	"time"
 )
 
-type watchEvent struct {
-	size int64
-}
+type watchEvent struct {}
 
 type watcher struct {
 	filePath string
@@ -27,35 +24,6 @@ func newWatcher(pathToFile string, tick time.Duration) *watcher {
 	}
 }
 
-func (w *watcher) start() {
-	go func() {
-		w.tick()
-		for range w.ticker.C {
-			w.tick()
-		}
-	}()
-}
-
-func (w *watcher) tick() {
-	size, err := w.size()
-	if err != nil {
-		w.errors <- err
-	} else if size != w.lastSize {
-		w.lastSize = size
-		w.events <- watchEvent{
-			size: size,
-		}
-	}
-}
-
 func (w *watcher) stop() {
 	w.ticker.Stop()
-}
-
-func (w *watcher) size() (int64, error) {
-	fi, err := os.Stat(w.filePath)
-	if err != nil {
-		return -1, err
-	}
-	return fi.Size(), nil
 }

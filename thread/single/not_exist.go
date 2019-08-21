@@ -1,7 +1,7 @@
 package single
 
 type NotExist struct {
-	CardId   int
+	CardID   int
 	CardName string
-	ParentId int
+	ParentID int
 }

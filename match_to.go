@@ -9,6 +9,7 @@ import (
 	"github.com/di-wu/mtga/thread/match_to"
 )
 
+// MatchTo is a structure that holds the parser's match to callbacks.
 type MatchTo struct {
 	onAuthenticateResponse           func(response match_to.AuthenticateResponse)
 	onGreToClientEvent               func(gre match_to.GreToClientEvent)
@@ -71,12 +72,19 @@ func (parser *Parser) parseMatchToThreadLog(l thread.Log) {
 	}
 }
 
+// OnAuthenticateResponse attaches the given callback, which will be called on an authentication response.
 func (to *MatchTo) OnAuthenticateResponse(callback func(response match_to.AuthenticateResponse)) {
 	to.onAuthenticateResponse = callback
 }
 
+// OnGreToClientEvent attaches the given callback, which will be called on every gre to client event.
 func (to *MatchTo) OnGreToClientEvent(callback func(gre match_to.GreToClientEvent)) {
 	to.onGreToClientEvent = callback
+}
+
+// OnMatchGameRoomStateChangedEvent attaches the given callback, which will be called on a match game room state change.
+func (to *MatchTo) OnMatchGameRoomStateChangedEvent(callback func(change match_to.RoomStateChange)) {
+	to.onMatchGameRoomStateChangedEvent = callback
 }
 
 func (parser *Parser) parseGreResponse(resp match_to.Response) {
@@ -155,66 +163,82 @@ func (parser *Parser) parseGreResponse(resp match_to.Response) {
 	}
 }
 
-func (to *MatchTo) OnGreConnectResp(callback func(resp match_to.ConnectResp)) {
+// OnGreConnectResponse attaches the given callback, which will be called on a connection response.
+func (to *MatchTo) OnGreConnectResponse(callback func(resp match_to.ConnectResp)) {
 	to.onGreConnectResp = callback
 }
 
-func (to *MatchTo) OnGreDieRollResultsResp(callback func(resp match_to.DieRollResultsResp)) {
+// OnGreDieRollResultsResponse attaches the given callback, which will be called on a die roll results response.
+func (to *MatchTo) OnGreDieRollResultsResponse(callback func(resp match_to.DieRollResultsResp)) {
 	to.onGreDieRollResultsResp = callback
 }
 
+// OnGreGameStateMessage attaches the given callback, which will be called on a game state message.
 func (to *MatchTo) OnGreGameStateMessage(callback func(msg match_to.GameStateMessage)) {
 	to.onGreGameStateMessage = callback
 }
 
+// OnGreQueuedGameStateMessage attaches the given callback, which will be called on a queued game state message.
 func (to *MatchTo) OnGreQueuedGameStateMessage(callback func(msg match_to.GameStateMessage)) {
 	to.onGreQueuedGameStateMessage = callback
 }
 
-func (to *MatchTo) OnGreGetSettingsResp(callback func(resp match_to.Settings)) {
+// OnGreGetSettingsResponse attaches the given callback, which will be called on getting the setting.
+func (to *MatchTo) OnGreGetSettingsResponse(callback func(resp match_to.Settings)) {
 	to.onGreGetSettingsResp = callback
 }
 
-func (to *MatchTo) OnGreSetSettingsResp(callback func(resp match_to.Settings)) {
+// OnGreSetSettingsResponse attaches the given callback, which will be called on setting the setting.
+func (to *MatchTo) OnGreSetSettingsResponse(callback func(resp match_to.Settings)) {
 	to.onGreSetSettingsResp = callback
 }
 
-func (to *MatchTo) OnGrePromptReq(callback func(req match_to.Prompt)) {
+// OnGrePromptRequest attaches the given callback, which will be called on requesting a prompt.
+func (to *MatchTo) OnGrePromptRequest(callback func(req match_to.Prompt)) {
 	to.onGrePromptReq = callback
 }
 
-func (to *MatchTo) OnGreMulliganReq(callback func(prompt, nonDecision match_to.Prompt, req match_to.MulliganReq)) {
+// OnGreMulliganRequest attaches the given callback, which will be called on requesting a mulligan.
+func (to *MatchTo) OnGreMulliganRequest(callback func(prompt, nonDecision match_to.Prompt, req match_to.MulliganReq)) {
 	to.onGreMulliganReq = callback
 }
 
+// OnGreTimerStateMessage attaches the given callback, which will be called on a timer state message.
 func (to *MatchTo) OnGreTimerStateMessage(callback func(msg match_to.TimerStateMessage)) {
 	to.onGreTimerStateMessage = callback
 }
 
+// OnGreUIMessage attaches the given callback, which will be called on a UI message.
 func (to *MatchTo) OnGreUIMessage(callback func(msg match_to.UiMessage)) {
 	to.onGreUIMessage = callback
 }
 
-func (to *MatchTo) OnGreActionsAvailableReq(callback func(prompt match_to.Prompt, req match_to.ActionsAvailableReq)) {
+// OnGreActionsAvailableRequest attaches the given callback, which will be called on requesting available actions.
+func (to *MatchTo) OnGreActionsAvailableRequest(callback func(prompt match_to.Prompt, req match_to.ActionsAvailableReq)) {
 	to.onGreActionsAvailableReq = callback
 }
 
-func (to *MatchTo) OnGreDeclareAttackersReq(callback func(prompt match_to.Prompt, req match_to.DeclareAttackersReq)) {
+// OnGreDeclareAttackersRequest attaches the given callback, which will be called on requesting an attackers declaration.
+func (to *MatchTo) OnGreDeclareAttackersRequest(callback func(prompt match_to.Prompt, req match_to.DeclareAttackersReq)) {
 	to.onGreDeclareAttackersReq = callback
 }
 
-func (to *MatchTo) OnGreSubmitTargetsResp(callback func(submit match_to.Submit)) {
+// OnGreSubmitTargetsResponse attaches the given callback, which will be called on submitting a targets response.
+func (to *MatchTo) OnGreSubmitTargetsResponse(callback func(submit match_to.Submit)) {
 	to.onGreSubmitTargetsResp = callback
 }
 
-func (to *MatchTo) OnGreSubmitAttackersResp(callback func(prompt, nonDecision match_to.Prompt, submit match_to.Submit)) {
+// OnGreSubmitAttackersResponse attaches the given callback, which will be called on submitting an attackers response.
+func (to *MatchTo) OnGreSubmitAttackersResponse(callback func(prompt, nonDecision match_to.Prompt, submit match_to.Submit)) {
 	to.onGreSubmitAttackersResp = callback
 }
 
-func (to *MatchTo) OnGreSelectTargetsReq(callback func(prompt, nonDecision match_to.Prompt, targets match_to.Select, allowCancel string, allowUndo bool)) {
+// OnGreSelectTargetsRequest attaches the given callback, which will be called on requesting a target selection.
+func (to *MatchTo) OnGreSelectTargetsRequest(callback func(prompt, nonDecision match_to.Prompt, targets match_to.Select, allowCancel string, allowUndo bool)) {
 	to.onGreSelectTargetsReq = callback
 }
 
-func (to *MatchTo) OnGreIntermissionReq(callback func(req match_to.IntermissionReq)) {
+// OnGreIntermissionRequest attaches the given callback, which will be called on requesting an intermission.
+func (to *MatchTo) OnGreIntermissionRequest(callback func(req match_to.IntermissionReq)) {
 	to.onGreIntermissionReq = callback
 }

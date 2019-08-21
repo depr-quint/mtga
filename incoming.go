@@ -516,7 +516,7 @@ func (incoming *Incoming) OnGetEventAndSeasonPayouts(callback func(payout event.
 	incoming.onGetEventAndSeasonPayouts = callback
 }
 
-// OnGetPlayerCourses attaches the given callback, which will be called on getting the course of the player.
+// OnGetPlayerCourse attaches the given callback, which will be called on getting the course of the player.
 func (incoming *Incoming) OnGetPlayerCourse(callback func(course event.Course)) {
 	incoming.onGetPlayerCourse = callback
 }
@@ -596,7 +596,7 @@ func (incoming *Incoming) OnGetPlayerInventory(callback func(inventory inventory
 	incoming.onGetPlayerInventory = callback
 }
 
-// GetPlayerSequenceData attaches the given callback, which will be called on getting the sequence data of the player.
+// OnGetPlayerSequenceData attaches the given callback, which will be called on getting the sequence data of the player.
 func (incoming *Incoming) OnGetPlayerSequenceData(callback func(data inventory.SequenceData)) {
 	incoming.onGetPlayerSequenceData = callback
 }

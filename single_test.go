@@ -8,12 +8,10 @@ import (
 )
 
 func TestSingleSkinsSeen(t *testing.T) {
-	l := RawLog{
-		Body: []string{`[UnityCrossThreadLogger]Skins seen: 69853=DA 68740=DA 69706=DA 69706=DA .`},
-	}
+	l := []string{`[UnityCrossThreadLogger]Skins seen: 69853=DA 68740=DA 69706=DA 69706=DA .`}
 	var callback1, callback2 bool
 	parser := Parser{}
-	parser.OnSingleTreadLog(func(log string) {
+	parser.OnSingleLineTreadLog(func(log string) {
 		callback1 = true
 	})
 	parser.OnSkinsSeen(func(skins single.Skins) {
@@ -30,14 +28,12 @@ func TestSingleSkinsSeen(t *testing.T) {
 }
 
 func TestSingleCardNotExist(t *testing.T) {
-	l := RawLog{
-		Body: []string{`[UnityCrossThreadLogger]Card #491 ("Zombie") had ParentId #490 but that card did not exist in the GameState.`},
-	}
+	l := []string{`[UnityCrossThreadLogger]Card #491 ("Zombie") had ParentID #490 but that card did not exist in the GameState.`}
 	var callback bool
 	parser := Parser{}
 	parser.OnCardNotExist(func(card single.NotExist) {
 		callback = true
-		if card.CardId != 491 || card.CardName != "Zombie" || card.ParentId != 490 {
+		if card.CardID != 491 || card.CardName != "Zombie" || card.ParentID != 490 {
 			t.Error()
 		}
 	})
@@ -48,9 +44,7 @@ func TestSingleCardNotExist(t *testing.T) {
 }
 
 func TestSingleNullEntity(t *testing.T) {
-	l := RawLog{
-		Body: []string{`[UnityCrossThreadLogger]NULL entity on { "id": 2450, "affectorId": 4005, "affectedIds": [ 409 ], "type": [ "AnnotationType_ModifiedToughness", "AnnotationType_ModifiedPower", "AnnotationType_Counter" ], "details": [ { "key": "count", "type": "KeyValuePairValueType_int32", "valueInt32": [ 1 ] }, { "key": "counter_type", "type": "KeyValuePairValueType_int32", "valueInt32": [ 1 ] } ], "allowRedaction": true }`},
-	}
+	l := []string{`[UnityCrossThreadLogger]NULL entity on { "id": 2450, "affectorId": 4005, "affectedIds": [ 409 ], "type": [ "AnnotationType_ModifiedToughness", "AnnotationType_ModifiedPower", "AnnotationType_Counter" ], "details": [ { "key": "count", "type": "KeyValuePairValueType_int32", "valueInt32": [ 1 ] }, { "key": "counter_type", "type": "KeyValuePairValueType_int32", "valueInt32": [ 1 ] } ], "allowRedaction": true }`}
 	var callback bool
 	parser := Parser{}
 	parser.OnNullEntity(func(null single.NullEntity) {
@@ -75,9 +69,7 @@ func TestSingleNullEntity(t *testing.T) {
 }
 
 func TestSingleStateChange(t *testing.T) {
-	l := RawLog{
-		Body: []string{`[UnityCrossThreadLogger]STATE CHANGED MatchCompleted -> Disconnected`},
-	}
+	l := []string{`[UnityCrossThreadLogger]STATE CHANGED MatchCompleted -> Disconnected`}
 	var callback bool
 	parser := Parser{}
 	parser.OnStateChange(func(from, to string) {
@@ -93,9 +85,7 @@ func TestSingleStateChange(t *testing.T) {
 }
 
 func TestUnknownSingleLog(t *testing.T) {
-	l := RawLog{
-		Body: []string{`[UnityCrossThreadLogger]UnknownLog`},
-	}
+	l := []string{`[UnityCrossThreadLogger]UnknownLog`}
 	var callback bool
 	parser := Parser{}
 	parser.OnUnknownLog(func(message string) {

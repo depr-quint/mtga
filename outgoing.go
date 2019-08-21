@@ -338,7 +338,7 @@ func (outgoing *Outgoing) OnClaimPrize(callback func(event event.Event)) {
 	outgoing.onClaimPrize = callback
 }
 
-// OnJoin attaches the given callback, which will be called on submitting a deck.
+// OnDeckSubmit attaches the given callback, which will be called on submitting a deck.
 func (outgoing *Outgoing) OnDeckSubmit(callback func(deck event.DeckSubmit)) {
 	outgoing.onDeckSubmit = callback
 }

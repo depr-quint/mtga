@@ -1,22 +1,25 @@
 package mtga
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/di-wu/mtga/thread"
+	"github.com/di-wu/mtga/thread/connect_resp"
 )
 
-// Parser is a structure that holds the parser's callbacks.
+// Parser is a structure that holds all the parser's callbacks.
 type Parser struct {
-	onZoneChange func(change ZoneChange)
+	onZoneChange  func(change ZoneChange)
+	onConnectResp func(resp connect_resp.Response)
 	// thread
 	onSingleTreadLog func(first string)
 	Single
 	onThreadLog func(log thread.Log)
 	Outgoing
 	Incoming
-	ConnectResp
 	Unhandled
 	MinusOne
 	ToMatch
@@ -28,19 +31,20 @@ type Parser struct {
 // Parse parses a raw log (returned by the tails logs channel).
 // It calls the callback that matches that parsed log.
 func (parser *Parser) Parse(l RawLog) {
-	if len(l.Body) == 0 {
+	// empty log
+	if len(l) == 0 {
 		return
 	}
 
-	first := strings.TrimSpace(l.Body[0])
-	if len(l.Body) == 1 {
+	first := strings.TrimSpace(l[0])
+	if len(l) == 1 {
 		switch {
 		case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
-			log := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
+			line := strings.TrimPrefix(first, "[UnityCrossThreadLogger]")
 			if parser.onSingleTreadLog != nil {
-				parser.onSingleTreadLog(log)
+				parser.onSingleTreadLog(line)
 			}
-			parser.parseSingleTreadLog(log)
+			parser.parseSingleTreadLog(line)
 		case strings.HasPrefix(first, "<<<<<<<<<<"):
 			parser.parserZoneChange(first)
 		default:
@@ -51,7 +55,7 @@ func (parser *Parser) Parse(l RawLog) {
 		return
 	}
 
-	switch remaining := l.Body[1:]; {
+	switch remaining := l[1:]; {
 	case strings.HasPrefix(first, "[UnityCrossThreadLogger]"):
 		threadLog := thread.NewLog(strings.TrimPrefix(first, "[UnityCrossThreadLogger]"), remaining)
 		if threadLog.Type == "" {
@@ -62,7 +66,7 @@ func (parser *Parser) Parse(l RawLog) {
 		if parser.onThreadLog != nil {
 			parser.onThreadLog(threadLog)
 		}
-		parser.parseTreadLog(threadLog)
+		parser.parseMultilineTreadLog(threadLog)
 	default:
 		if parser.onUnknownLog != nil {
 			parser.onUnknownLog(fmt.Sprintf("Unparsed log: %s\n%s", first, remaining))
@@ -70,15 +74,17 @@ func (parser *Parser) Parse(l RawLog) {
 	}
 }
 
-func (parser *Parser) OnSingleTreadLog(callback func(log string)) {
+// OnSingleLineTreadLog attaches the given callback, which will be called on single line thread log.
+func (parser *Parser) OnSingleLineTreadLog(callback func(log string)) {
 	parser.onSingleTreadLog = callback
 }
 
+// OnTreadLog attaches the given callback, which will be called on every thread log.
 func (parser *Parser) OnTreadLog(callback func(log thread.Log)) {
 	parser.onThreadLog = callback
 }
 
-func (parser *Parser) parseTreadLog(l thread.Log) {
+func (parser *Parser) parseMultilineTreadLog(l thread.Log) {
 	if len(l.Raw) <= 2 {
 		return
 	}
@@ -89,7 +95,14 @@ func (parser *Parser) parseTreadLog(l thread.Log) {
 	case thread.Incoming:
 		parser.parseIncomingThreadLog(l)
 	case thread.ConnectResp:
-		parser.parseConnectRespThreadLog(l)
+		if parser.onConnectResp != nil {
+			var resp connect_resp.Response
+			err := json.Unmarshal(l.Raw, &resp)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			parser.onConnectResp(resp)
+		}
 	case thread.Unhandled:
 		parser.parseUnhandledThreadLog(l)
 	case thread.MinusOne:
@@ -105,6 +118,12 @@ func (parser *Parser) parseTreadLog(l thread.Log) {
 	}
 }
 
+// OnConnectResponse attaches the given callback, which will be called on getting the connection response.
+func (parser *Parser) OnConnectResponse(callback func(resp connect_resp.Response)) {
+	parser.onConnectResp = callback
+}
+
+// OnUnknownLog attaches the given callback, which will be called on unparsed logs.
 func (parser *Parser) OnUnknownLog(callback func(message string)) {
 	parser.onUnknownLog = callback
 }

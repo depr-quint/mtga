@@ -3,13 +3,14 @@ package mtga
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/di-wu/mtga/thread/match_to"
-	panic "log"
+	"log"
 
 	"github.com/di-wu/mtga/thread"
+	"github.com/di-wu/mtga/thread/match_to"
 	"github.com/di-wu/mtga/thread/unhandled"
 )
 
+// Unhandled is a structure that holds the parser's unhandled callbacks.
 type Unhandled struct {
 	onDieRollResults      func(results unhandled.DieRollResults)
 	onSubmitTargetsResp   func(resp match_to.Submit)
@@ -23,12 +24,12 @@ func (parser *Parser) parseUnhandledThreadLog(l thread.Log) {
 			results := struct {
 				Type               string                   `json:"type"`
 				SystemSeatIds      []int                    `json:"systemSeatIds"`
-				MsgId              int                      `json:"msgId"`
+				MsgID              int                      `json:"msgId"`
 				DieRollResultsResp unhandled.DieRollResults `json:"dieRollResultsResp"`
 			}{}
 			err := json.Unmarshal(l.Raw, &results)
 			if err != nil {
-				panic.Fatalln(err)
+				log.Fatalln(err)
 			}
 			parser.onDieRollResults(results.DieRollResultsResp)
 		}
@@ -37,7 +38,7 @@ func (parser *Parser) parseUnhandledThreadLog(l thread.Log) {
 			var resp match_to.Response
 			err := json.Unmarshal(l.Raw, &resp)
 			if err != nil {
-				panic.Fatalln(err)
+				log.Fatalln(err)
 			}
 
 			if resp.SubmitTargetsResp != nil {
@@ -49,7 +50,7 @@ func (parser *Parser) parseUnhandledThreadLog(l thread.Log) {
 			var resp match_to.Response
 			err := json.Unmarshal(l.Raw, &resp)
 			if err != nil {
-				panic.Fatalln(err)
+				log.Fatalln(err)
 			}
 
 			if resp.Prompt != nil && resp.SubmitAttackersResp != nil && resp.NonDecisionPlayerPrompt != nil {
@@ -63,14 +64,17 @@ func (parser *Parser) parseUnhandledThreadLog(l thread.Log) {
 	}
 }
 
+// OnDieRollResults attaches the given callback, which will be called on getting the die roll results.
 func (unhandled *Unhandled) OnDieRollResults(callback func(results unhandled.DieRollResults)) {
 	unhandled.onDieRollResults = callback
 }
 
-func (unhandled *Unhandled) OnSubmitTargetsResp(callback func(resp match_to.Submit)) {
+// OnSubmitTargetsResponse attaches the given callback, which will be called on submitting an targets response.
+func (unhandled *Unhandled) OnSubmitTargetsResponse(callback func(resp match_to.Submit)) {
 	unhandled.onSubmitTargetsResp = callback
 }
 
-func (unhandled *Unhandled) OnSubmitAttackersResp(callback func(prompt, nonDecision match_to.Prompt, submit match_to.Submit)) {
+// OnSubmitAttackersResponse attaches the given callback, which will be called on submitting an attackers response.
+func (unhandled *Unhandled) OnSubmitAttackersResponse(callback func(prompt, nonDecision match_to.Prompt, submit match_to.Submit)) {
 	unhandled.onSubmitAttackersResp = callback
 }

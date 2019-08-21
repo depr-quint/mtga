@@ -42,7 +42,7 @@ func NewTail(filePath string) (*Tail, error) {
 }
 
 // Logs returns a channel of (incoming) logs read from the monitored file.
-func (t Tail) Logs() chan RawLog {
+func (t *Tail) Logs() chan RawLog {
 	return t.logs
 }
 
@@ -54,13 +54,13 @@ func (t *Tail) open() error {
 		t.file = nil
 	}
 
-	if file, err := os.Open(t.filePath); err != nil {
+	file, err := os.Open(t.filePath)
+	if err != nil {
 		return err
-	} else {
-		t.file = file
-		t.reader = bufio.NewReader(t.file)
-		return nil
 	}
+	t.file = file
+	t.reader = bufio.NewReader(t.file)
+	return nil
 }
 
 func (t *Tail) run() {
@@ -117,8 +117,8 @@ func (t *Tail) tail() error {
 			}
 
 			// raw log is empty
-			if l.Body == nil {
-				l.Body = append(l.Body, trim)
+			if l == nil {
+				l = append(l, trim)
 				continue
 			}
 
@@ -126,19 +126,17 @@ func (t *Tail) tail() error {
 				(unicode.IsNumber(rune(line[0]))) ||
 				(strings.HasPrefix(trim, "[") && len(trim) > 2) {
 				t.logs <- l
-				l = RawLog{
-					Body: []string{trim},
-				}
+				l = []string{trim}
 			} else if strings.HasPrefix(trim, "(") && strings.HasSuffix(trim, ")") {
 				t.logs <- l
-				t.logs <- RawLog{Body: []string{trim[1 : len(trim)-1]}}
+				t.logs <- []string{trim[1 : len(trim)-1]}
 				l = RawLog{}
 			} else if strings.HasPrefix(trim, "<<<<<<<<<<") {
 				t.logs <- l
-				t.logs <- RawLog{Body: []string{trim}}
+				t.logs <- []string{trim}
 				l = RawLog{}
 			} else {
-				l.Body = append(l.Body, trim)
+				l = append(l, trim)
 			}
 		}
 
