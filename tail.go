@@ -2,12 +2,19 @@ package mtga
 
 import (
 	"bufio"
+	"bytes"
+	"github.com/fsnotify/fsnotify"
 	"io"
 	"os"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
+)
+
+const (
+	bufferSize = 4 * 1024
+	peekSize   = 1024
 )
 
 // Tail can monitor data streams and open files, displaying new information as it is written.
@@ -17,11 +24,11 @@ type Tail struct {
 	file     *os.File
 	filePath string
 	logs     chan RawLog
-	reader   *bufio.Reader
-	watcher  *watcher
-	offset   int64
-	done     chan bool
 	err      error
+	reader   *bufio.Reader
+	watcher  *fsnotify.Watcher
+	offset   int64
+	closeCh  chan struct{}
 }
 
 // NewTail creates a new tail that monitors the file located at the given file path.
@@ -29,10 +36,11 @@ func NewTail(filePath string) (*Tail, error) {
 	t := &Tail{
 		filePath: filePath,
 		logs:     make(chan RawLog),
-		done:     make(chan bool),
+		closeCh:  make(chan struct{}),
 	}
 
-	if err := t.open(); err != nil {
+	err := t.open()
+	if err != nil {
 		return nil, err
 	}
 
@@ -41,26 +49,19 @@ func NewTail(filePath string) (*Tail, error) {
 	return t, nil
 }
 
-// Logs returns a channel of (incoming) logs read from the monitored file.
+// Logs returns a channel of logs read from the monitored file.
 func (t *Tail) Logs() chan RawLog {
 	return t.logs
 }
 
-func (t *Tail) open() error {
-	if t.file != nil {
-		if err := t.file.Close(); err != nil {
-			return err
-		}
-		t.file = nil
-	}
+// Err returns a channel of errors read from the monitored file.
+func (t *Tail) Err() error {
+	return t.err
+}
 
-	file, err := os.Open(t.filePath)
-	if err != nil {
-		return err
-	}
-	t.file = file
-	t.reader = bufio.NewReader(t.file)
-	return nil
+// Close stops the monitoring.
+func (t *Tail) Close() {
+	t.closeCh <- struct{}{}
 }
 
 func (t *Tail) run() {
@@ -71,9 +72,7 @@ func (t *Tail) close(err error) {
 	t.err = err
 
 	if t.file != nil {
-		if err := t.file.Close(); err != nil {
-			t.err = err
-		}
+		t.file.Close()
 	}
 
 	close(t.logs)
@@ -81,47 +80,69 @@ func (t *Tail) close(err error) {
 
 func (t *Tail) tail() error {
 	var (
-		events = make(chan watchEvent)
-		errors = make(chan error, 1)
+		err     error
+		eventCh = make(chan fsnotify.Event)
+		errCh   = make(chan error, 1)
 	)
 
-	t.watcher = newWatcher(t.filePath, time.Duration(5)*time.Second)
-	defer t.watcher.stop()
-	go t.watch(events, errors)
+	t.watcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+
+	defer t.watcher.Close()
+	go t.watch(eventCh, errCh)
+	t.watcher.Add(t.filePath)
 
 	for {
 		var l RawLog
 		for {
+			// remove null bytes.
+			for {
+				b, _ := t.reader.Peek(peekSize)
+				// index of the last instance of \x00 in b.
+				i := bytes.LastIndexByte(b, '\x00')
+				if i > 0 {
+					// skips the next i + 1 bytes, n is the number of bytes discarded.
+					t.reader.Discard(i + 1)
+				}
+				if i+1 < peekSize {
+					break
+				}
+			}
+
 			s, err := t.reader.ReadBytes('\n')
 			if err != nil && err != io.EOF {
 				return err
 			}
-
+			// end of file.
 			if err == io.EOF {
-				l := len(s)
-
-				t.offset, err = t.file.Seek(-int64(l), io.SeekCurrent)
+				length := len(s)
+				// sets the offset for the next read on file to -length
+				t.offset, err = t.file.Seek(-int64(length), io.SeekCurrent)
 				if err != nil {
 					return err
 				}
-
+				// discards any buffered data, resets all state.
 				t.reader.Reset(t.file)
 				break
 			}
 
+			// bundle lines into logs
 			line := string(s)
 			trim := strings.TrimSpace(line)
 			// empty line
-			if strings.TrimSpace(line) == "" {
+			if trim == "" {
 				continue
 			}
 
-			// raw log is empty
+			// first line
 			if l == nil {
 				l = append(l, trim)
 				continue
 			}
 
+			// TODO: clean this...
 			if (unicode.IsLetter(rune(line[0])) && strings.ToLower(trim) != "true") ||
 				(unicode.IsNumber(rune(line[0]))) ||
 				(strings.HasPrefix(trim, "[") && len(trim) > 2) {
@@ -141,52 +162,57 @@ func (t *Tail) tail() error {
 		}
 
 		select {
-		case <-events:
-			fi, err := t.file.Stat()
-			if err != nil {
-				if !os.IsNotExist(err) {
-					return err
-				}
-
-				if err := t.open(); err != nil {
-					return err
-				}
-				continue
-			}
-
-			if t.offset > fi.Size() {
-				t.offset, err = t.file.Seek(0, io.SeekStart)
+		case event := <-eventCh:
+			switch event.Op {
+			case fsnotify.Chmod:
+				fallthrough
+			case fsnotify.Write:
+				info, err := t.file.Stat()
 				if err != nil {
+					if !os.IsNotExist(err) {
+						return err
+					}
+					// reset if file is missing
+					if err := t.reset(); err != nil {
+						return err
+					}
+					continue
+				}
+				// file became shorter...
+				if t.offset > info.Size() {
+					t.offset, err = t.file.Seek(0, io.SeekStart)
+					if err != nil {
+						return err
+					}
+					t.reader.Reset(t.file)
+				}
+				continue
+			default:
+				if err := t.reset(); err != nil {
 					return err
 				}
-
-				t.reader.Reset(t.file)
+				continue
 			}
-			continue
-
-		case err := <-errors:
+		case err := <-errCh:
 			return err
-
-		case <-t.done:
-			t.watcher.stop()
+		case <-t.closeCh:
+			t.watcher.Remove(t.filePath)
 			return nil
-
 		case <-time.After(10 * time.Second):
-			fi1, err := t.file.Stat()
+			info1, err := t.file.Stat()
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			info2, err := os.Stat(t.filePath)
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
 
-			fi2, err := os.Stat(t.filePath)
-			if err != nil && !os.IsNotExist(err) {
-				return err
-			}
-
-			if os.SameFile(fi1, fi2) {
+			if os.SameFile(info1, info2) {
 				continue
 			}
 
-			if err := t.open(); err != nil {
+			if err := t.reset(); err != nil {
 				return err
 			}
 			continue
@@ -194,13 +220,57 @@ func (t *Tail) tail() error {
 	}
 }
 
-func (t *Tail) watch(events chan watchEvent, errors chan error) {
+func (t *Tail) open() error {
+	if t.file != nil {
+		t.file.Close()
+		t.file = nil
+	}
+
+	file, err := os.Open(t.filePath)
+	if err != nil {
+		return err
+	}
+
+	t.file = file
+	t.reader = bufio.NewReaderSize(t.file, bufferSize)
+
+	return nil
+}
+
+func (t *Tail) reset() error {
+	t.watcher.Remove(t.filePath)
+	if err := t.open(); err != nil {
+		return err
+	}
+	t.watcher.Add(t.filePath)
+	return nil
+}
+
+func (t *Tail) watch(eventCh chan fsnotify.Event, errChan chan error) {
 	for {
 		select {
-		case event := <-events:
-			events <- event
-		case err := <-errors:
-			errors <- err
+		case event, ok := <-t.watcher.Events:
+			if !ok {
+				return
+			}
+			// ignore writes
+			if event.Op == fsnotify.Write {
+				select {
+				case eventCh <- event:
+				default:
+				}
+			} else {
+				select {
+				case eventCh <- event:
+				case err := <-t.watcher.Errors:
+					errChan <- err
+					return
+				}
+			}
+
+		case err := <-t.watcher.Errors:
+			errChan <- err
+			return
 		}
 	}
 }
