@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ThreadLog
@@ -19,6 +20,7 @@ type Log struct {
 	Type   LogType
 	Method LogMethod
 	Id     int
+	Time   time.Time
 	Raw    []byte
 }
 
@@ -33,6 +35,7 @@ func NewLog(heading string, body []string) Log {
 	}
 
 	if typ == Outgoing || typ == Incoming {
+		t, _ := time.Parse("1/02/2006 03:04:05 PM", heading)
 		method := LogMethod(regexp.MustCompile(`[a-zA-Z0-9.]+`).FindStringSubmatch(first)[0])
 		id, _ := strconv.Atoi(regexp.MustCompile(`\(([0-9]+)\)`).FindStringSubmatch(first)[1])
 		str := strings.TrimSpace(strings.Join(remaining, " "))
@@ -50,7 +53,7 @@ func NewLog(heading string, body []string) Log {
 		} else {
 			raw = []byte(str)
 		}
-		return Log{Type: typ, Method: method, Id: id, Raw: raw}
+		return Log{Type: typ, Method: method, Id: id, Time: t, Raw: raw}
 	}
 
 	if strings.HasPrefix(heading, "ConnectResp") {
@@ -63,15 +66,17 @@ func NewLog(heading string, body []string) Log {
 	}
 
 	if len(strings.Split(heading, ":")) == 3 {
+		t, _ := time.Parse("1/02/2006 03:04:05 PM", heading)
 		str := strings.Split(first, " ")
 		method, surplus := LogMethod(str[2]), str[3]
 		if surplus == "[]" {
 			return Log{}
 		}
-		return Log{Type: MinusOne, Method: method, Raw: []byte(strings.Join(append([]string{surplus}, remaining...), " "))}
+		return Log{Type: MinusOne, Method: method, Time: t, Raw: []byte(strings.Join(append([]string{surplus}, remaining...), " "))}
 	}
 
 	if str := strings.Split(heading, ": "); len(str) == 3 {
+		t, _ := time.Parse("1/02/2006 03:04:05 PM", str[0])
 		var raw []byte
 		var m map[string]interface{}
 		err := json.Unmarshal([]byte(strings.Join(body, " ")), &m)
@@ -95,7 +100,7 @@ func NewLog(heading string, body []string) Log {
 			}
 			typ = ToMatch
 		}
-		return Log{Type: typ, Method: method, Raw: raw}
+		return Log{Type: typ, Method: method, Time: t, Raw: raw}
 	}
 
 	return Log{}
